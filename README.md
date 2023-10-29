@@ -28,7 +28,9 @@ Only do this if you don't want to dump assets from previous gameplay sessions.<b
 <b>After the prompt it should start ripping! If you cleared your cache just start playing a game and it will begin.</b>
 
 ## Dependencies
-Currently only one module is required:
+Currently two modules are required:
 ```
 pip install requests
+pip install Pillow
 ```
+Pillow is required for srgb2lin to function, this fixes strange colors with Khronos Texture PNGs.
