@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="https://i.imgur.com/MhFkysO.png" alt="BloxRip" width="150">
+  <img src="https://i.imgur.com/drqCT3O.png" alt="BloxRip" width="150">
   <br>
   <b>BloxDump</b>
   <br>
