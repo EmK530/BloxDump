@@ -98,13 +98,16 @@ def main(name):
     elif begin.find(b"version")!=-1:
         return debug("Ignoring unknown file.")
     elif begin.find(b'{"locale":"')!=-1:
-        return debug("Ignoring unsupported translation file.")
+        print("Data identified as JSON translation")
+        output="translation"
+        folder="Translations"
+        #return debug("Ignoring unsupported translation file.")
     elif begin.find(b"PNG\r\n")!=-1:
-        print("Data identified as PNG.")
+        print("Data identified as PNG")
         output="png"
         folder="Textures"
     elif begin.find(b"OggS")!=-1:
-        print("Data identified as OGG.")
+        print("Data identified as OGG")
         output="ogg"
         folder="Sounds"
     elif begin.find(b"KTX ")!=-1:
@@ -121,9 +124,9 @@ def main(name):
         return warn("File unrecognized: "+begin.decode('iso-8859-15'))
     if output=="ktx":
         if not path.isdir("temp"):
-            system('mkdir temp')
+            system('mkdir temp >nul 2>&1')
         if not path.isdir("assets/"+folder):
-            system('mkdir "assets/'+folder+'"')
+            system('mkdir "assets/'+folder+'" >nul 2>&1')
         out=open("temp/"+outhash+".ktx","wb")
         out.write(cont)
         out.close()
@@ -137,7 +140,7 @@ def main(name):
         js=json.loads(cont)
         outname=js["name"]
         if not path.isdir("assets/"+folder):
-            system('mkdir "assets/'+folder+'"')
+            system('mkdir "assets/'+folder+'" >nul 2>&1')
         out=open("assets/"+folder+"/"+outname+".json","wb")
         out.write(cont)
         out.close()
@@ -151,9 +154,17 @@ def main(name):
             out=open("assets/"+folder+"/"+outname+"-"+i["name"]+".ttf","wb")
             out.write(dl2.content)
             out.close()
+    elif output=="translation":
+        js=json.loads(cont)
+        locale=js["locale"]
+        if not path.isdir("assets/"+folder):
+            system('mkdir "assets/'+folder+'" >nul 2>&1')
+        out=open("assets/"+folder+"/locale-"+locale+".json","wb")
+        out.write(cont)
+        out.close()
     elif output!=None:
         if not path.isdir("assets/"+folder):
-            system('mkdir "assets/'+folder+'"')
+            system('mkdir "assets/'+folder+'" >nul 2>&1')
         out=open("assets/"+folder+"/"+outhash+"."+output,"wb")
         out.write(cont)
         out.close()
