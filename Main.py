@@ -1,4 +1,4 @@
-import ctypes,tempfile,time,requests
+import ctypes,tempfile,time,requests,json
 from threading import Thread
 from multiprocessing import Process,cpu_count
 from os import path,system,listdir
@@ -113,6 +113,10 @@ def main(name):
         print("Data identified as Khronos Texture")
         output="ktx"
         folder="KTX Textures"
+    elif begin.find(b'"name": "')!=-1:
+        print("Data identified as JSON font list")
+        output="ttf"
+        folder="Fonts"
     else:
         return warn("File unrecognized: "+begin.decode('iso-8859-15'))
     if output=="ktx":
@@ -129,6 +133,24 @@ def main(name):
         p.start()
         p.join()
         system('del temp\\'+outhash+'.ktx')
+    elif output=="ttf":
+        js=json.loads(cont)
+        outname=js["name"]
+        if not path.isdir("assets/"+folder):
+            system('mkdir "assets/'+folder+'"')
+        out=open("assets/"+folder+"/"+outname+".json","wb")
+        out.write(cont)
+        out.close()
+        print("Found {} fonts".format(len(js["faces"])))
+        for i in js["faces"]:
+            print("Downloading {}-{}.ttf...".format(outname,i["name"]))
+            assetid=i["assetId"].split("rbxassetid://")[1]
+            dl2=requests.get("https://assetdelivery.roblox.com/v1/asset?id="+assetid)
+            if not dl2.status_code == 200:
+                return warn("Download failed.")
+            out=open("assets/"+folder+"/"+outname+"-"+i["name"]+".ttf","wb")
+            out.write(dl2.content)
+            out.close()
     elif output!=None:
         if not path.isdir("assets/"+folder):
             system('mkdir "assets/'+folder+'"')
