@@ -14,30 +14,9 @@ knownlinks = []
 tempPath = tempfile.gettempdir().replace("\\","/")+"/Roblox/http/"
 
 bans=[
-    "6f6e1286e42337f99a4efe3d4fb98f1f",
-    "d21578879edb10a2f7e4ca2911d2bbd0",
-    "c26a6df02bf7b17d3cea472f6a627f5a",
-    "105ef32425c8daed4faf8a6cdcdfebda",
-    "42761c17b237d1b45e5d679d4667154e",
-    "7aa244b693b4bd81f83d647ada875dbe",
-    "b26520d7ab785ecd3d0b4e1791e7c600",
-    "82bd55bb61ab656795ff1802931b86a4",
-    "c225deac4158db9534cedac95c085b48",
-    "e475ad54b5e55e78d776963fe2ddfac3",
-    "30937bbd0606d35e008568b86f0f2ac2",
-    "bb1661a3e5a71cb2a4477ae53d763061",
-    "785d64cc939b667ab427c780edde2787",
-    "c055f4057943c53a9569baae5b8b556b",
-    "1a3b93657ec3abfcb3e6281109227bd5",
-    "56319ee754308fb380f97ef786d57c30",
-    "bc53ad1bac3236791dd0f53491332cbe",
-    "4d904b7e84e30c67adf7bf061052c7f1",
-    "312cb4bcc81000059cb92018c756aaf6",
-    "ffdbefb3658c2d2244d2d28df08069cf",
-    "f38951e46808388198c4e58a540a0f21",
-    "8791c8d6087b9f56c3058bc0bdaa2a6d",
     "noFilter",
-    "Png"
+    "Png",
+    "isCircular"
 ]
 
 oldprint = print
