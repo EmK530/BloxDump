@@ -6,7 +6,7 @@
 </h1>
 <p align="center">
   A simple Python script that goes through Roblox's CDN cache and dumps any recognized files.<br>
-  This essentially lets you dump assets from any Roblox game.
+  This essentially lets you dump assets from any Roblox game and Roblox in general.
 </p>
 
 ## Support
