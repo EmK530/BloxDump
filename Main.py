@@ -112,7 +112,7 @@ def main(name):
         output="ktx"
         folder="KTX Textures"
     elif begin.find(b'"name": "')!=-1:
-        print("Data identified as TTF.")
+        print("Data identified as JSON font list")
         output="ttf"
         folder="Fonts"
     elif begin.find(b'{"')!=-1:
