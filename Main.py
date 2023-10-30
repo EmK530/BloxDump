@@ -99,8 +99,6 @@ def main(name):
         return debug("Ignoring unknown file.")
     elif begin.find(b'{"locale":"')!=-1:
         return debug("Ignoring unsupported translation file.")
-    elif begin.find(b'{"')!=-1:
-        return debug("Ignoring general JSON file.")
     elif begin.find(b"PNG\r\n")!=-1:
         print("Data identified as PNG.")
         output="png"
@@ -114,9 +112,11 @@ def main(name):
         output="ktx"
         folder="KTX Textures"
     elif begin.find(b'"name": "')!=-1:
-        print("Data identified as JSON font list")
+        print("Data identified as TTF.")
         output="ttf"
         folder="Fonts"
+    elif begin.find(b'{"')!=-1:
+        return debug("Ignoring general JSON file.")
     else:
         return warn("File unrecognized: "+begin.decode('iso-8859-15'))
     if output=="ktx":
