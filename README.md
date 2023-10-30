@@ -14,6 +14,7 @@ Currently these file formats are supported:<br>
 <b>Audio files (OGG)</b><br>
 <b>2D Textures (PNG)</b><br>
 <b>3D Textures (KTX => PNG)</b><br>
+<b>Fonts (TTF)</b><br>
 
 ## Contributions
 If there is any file format that you want to add support for, feel free to make a pull request!<br>
