@@ -90,6 +90,10 @@ def main(name):
         print("Data identified as PNG")
         output="png"
         folder="Textures"
+    elif begin.find(b"JFIF")!=-1:
+        print("Data identified as JFIF")
+        output="jfif"
+        folder="Textures"
     elif begin.find(b"OggS")!=-1:
         print("Data identified as OGG")
         output="ogg"
@@ -106,8 +110,8 @@ def main(name):
         print("Data identified as JSON font list")
         output="ttf"
         folder="Fonts"
-    elif begin.find(b'{"')!=-1:
-        return debug("Ignoring general JSON file.")
+    elif begin.find(b'{"applicationSettings')!=-1:
+        return debug("Ignoring FFlag JSON file.")
     else:
         return warn("File unrecognized: "+begin.decode('iso-8859-15'))
     if output=="ktx":
