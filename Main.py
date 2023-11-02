@@ -72,11 +72,13 @@ def main(name):
     output=None
     folder=None
     if begin.find(b"<roblox!")!=-1:
-        return debug("Ignoring unsupported XML file.")
+        print("Data identified as RBXM Animation")
+        output="rbxm"
+        folder="Animations"
     elif begin.find(b"<roblox xml")!=-1:
         return debug("Ignoring unsupported XML file.")
     elif begin.find(b"version")!=-1:
-        print("Data identified as Roblox Mesh.")
+        print("Data identified as Roblox Mesh")
         output="mesh"
         folder="Meshes"
     elif begin.find(b'{"locale":"')!=-1:
@@ -93,7 +95,7 @@ def main(name):
         output="ogg"
         folder="Sounds"
     elif begin.find(b"matroska")!=-1:
-        print("Data identified as Matroska? Assuming MP3 output.")
+        print("Data identified as Matroska? Assuming MP3 output")
         output="mp3"
         folder="Sounds"
     elif begin.find(b"KTX ")!=-1:
