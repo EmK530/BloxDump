@@ -10,7 +10,7 @@
 </p>
 
 ## Support
-Currently these file formats are supported:<br>
+List of everything BloxDump can currently dump:<br>
 <b>2D Textures (PNG)</b><br>
 <b>3D Textures (KTX => PNG)</b><br>
 <b>Animations (RBXM)</b><br>
