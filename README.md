@@ -11,11 +11,25 @@
 
 ## Support
 Currently these file formats are supported:<br>
-<b>Audio files (OGG)</b><br>
 <b>2D Textures (PNG)</b><br>
 <b>3D Textures (KTX => PNG)</b><br>
+<b>Animations (RBXM)</b><br>
 <b>Fonts (TTF)</b><br>
+<b>Meshes (OBJ)</b>  [[INCOMPLETE](https://github.com/EmK530/BloxDump/edit/main/README.md#supported-mesh-versions)]<br>
+<b>Sounds (OGG)</b><br>
 <b>Translations (JSON)</b><br>
+
+## Supported mesh versions
+✅ `version 1.00`<br>
+✅ `version 1.01`<br>
+❌ `version 2.00`<br>
+❌ `version 3.00`<br>
+❌ `version 3.01`<br>
+❌ `version 4.00`<br>
+❌ `version 4.01`<br>
+❌ `version 5.00`<br>
+❌ `version 6.00`<br><br>
+<b>More support is in the works, stay tuned!</b>
 
 ## Contributions
 If there is any file format that you want to add support for, feel free to make a pull request!<br>
