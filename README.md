@@ -15,7 +15,7 @@ List of everything BloxDump can currently dump:<br>
 <b>3D Textures (KTX => PNG)</b><br>
 <b>Animations (RBXM)</b><br>
 <b>Fonts (TTF)</b><br>
-<b>Meshes (OBJ)</b>  [[INCOMPLETE](https://github.com/EmK530/BloxDump/edit/main/README.md#supported-mesh-versions)]<br>
+<b>Meshes (OBJ)</b>  [[INCOMPLETE](https://github.com/EmK530/BloxDump/tree/main#supported-mesh-versions)]<br>
 <b>Sounds (OGG)</b><br>
 <b>Translations (JSON)</b><br>
 
