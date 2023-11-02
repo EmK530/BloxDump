@@ -3,6 +3,7 @@ from threading import Thread
 from multiprocessing import Process,cpu_count
 from os import path,system,listdir
 from srgb2lin import convert
+from MeshConverter import BloxMesh,supported_mesh_versions
 
 threads = 0
 db = False
@@ -17,10 +18,6 @@ bans=[
     "noFilter",
     "Png",
     "isCircular"
-]
-
-supported_mesh_versions = [
-
 ]
 
 oldprint = print
@@ -115,22 +112,22 @@ def main(name):
         if not path.isdir("temp"):
             system('mkdir temp >nul 2>&1')
         if not path.isdir("assets/"+folder):
-            system('mkdir "assets/'+folder+'" >nul 2>&1')
-        out=open("temp/"+outhash+".ktx","wb")
+            system('mkdir "assets/{}" >nul 2>&1'.format(folder))
+        out=open("temp/{}.ktx".format(outhash),"wb")
         out.write(cont)
         out.close()
         stopped=False
-        system('pvrtextoolcli -i temp/'+outhash+'.ktx -noout -shh -d "assets/'+folder+'/'+outhash+'.png"')
-        p = Process(target=convert,args=('assets/'+folder+'/'+outhash+'.png',))
+        system('pvrtextoolcli -i temp/{}.ktx -noout -shh -d "assets/{}/{}.png"'.format(outhash,folder,outhash))
+        p = Process(target=convert,args=('assets/{}/{}.png'.format(folder,outhash),))
         p.start()
         p.join()
-        system('del temp\\'+outhash+'.ktx')
+        system('del temp\\{}.ktx'.format(outhash))
     elif output=="ttf":
         js=json.loads(cont)
         outname=js["name"]
         if not path.isdir("assets/"+folder):
-            system('mkdir "assets/'+folder+'" >nul 2>&1')
-        out=open("assets/"+folder+"/"+outname+".json","wb")
+            system('mkdir "assets/{}" >nul 2>&1'.format(folder))
+        out=open("assets/{}/{}.json".format(folder,outname),"wb")
         out.write(cont)
         out.close()
         print("Found {} fonts".format(len(js["faces"])))
@@ -140,15 +137,15 @@ def main(name):
             dl2=requests.get("https://assetdelivery.roblox.com/v1/asset?id="+assetid)
             if not dl2.status_code == 200:
                 return warn("Download failed.")
-            out=open("assets/"+folder+"/"+outname+"-"+i["name"]+".ttf","wb")
+            out=open("assets/{}/{}-{}.ttf".format(folder,outname,i["name"]),"wb")
             out.write(dl2.content)
             out.close()
     elif output=="translation":
         js=json.loads(cont)
         locale=js["locale"]
         if not path.isdir("assets/"+folder):
-            system('mkdir "assets/'+folder+'" >nul 2>&1')
-        out=open("assets/"+folder+"/locale-"+locale+".json","wb")
+            system('mkdir "assets/{}" >nul 2>&1'.format(folder))
+        out=open("assets/{}/locale-{}.json".format(folder,locale),"wb")
         out.write(cont)
         out.close()
     elif output=="mesh":
@@ -156,11 +153,13 @@ def main(name):
         numOnlyVer=meshVersion[8:12]
         noDotVer=numOnlyVer.replace(".","")
         if meshVersion in supported_mesh_versions:
-            pass
+            print("Converting mesh version {}".format(numOnlyVer))
+            BloxMesh.Convert(cont,folder,outhash)
         else:
             print("Mesh version {} unsupported! Dumping raw file.".format(numOnlyVer))
+            folder="Unsupported "+folder
             if not path.isdir("assets/"+folder):
-                system('mkdir "assets/'+folder+'" >nul 2>&1')
+                system('mkdir "assets/{}" >nul 2>&1'.format(folder))
             out=open("assets/{}/{}.bm{}".format(folder,outhash,noDotVer),"wb")
             out.write(cont)
             out.close()
@@ -184,7 +183,7 @@ if __name__ == '__main__':
     ans=input("Type Y to clear or anything else to proceed: ")
     if ans.lower()=="y":
         print("Deleting Roblox cache...")
-        system('del '+tempPath.replace("/","\\")+"* /q")
+        system('del {}* /q'.format(tempPath.replace("/","\\")))
     system("cls")
     ctypes.windll.kernel32.SetConsoleTitleW('BloxDump | Idle')
     print("BloxDump started.")
