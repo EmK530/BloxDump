@@ -19,6 +19,10 @@ bans=[
     "isCircular"
 ]
 
+supported_mesh_versions = [
+
+]
+
 oldprint = print
 def debug(tx):
     if db:
@@ -67,7 +71,7 @@ def main(name):
         else:
             break
     cont=dl.content
-    begin=cont[0:32]
+    begin=cont[0:48]
     output=None
     folder=None
     if begin.find(b"<roblox!")!=-1:
@@ -75,7 +79,9 @@ def main(name):
     elif begin.find(b"<roblox xml")!=-1:
         return debug("Ignoring unsupported XML file.")
     elif begin.find(b"version")!=-1:
-        return debug("Ignoring unsupported mesh file.")
+        print("Data identified as Roblox Mesh.")
+        output="mesh"
+        folder="Meshes"
     elif begin.find(b'{"locale":"')!=-1:
         print("Data identified as JSON translation")
         output="translation"
@@ -88,6 +94,10 @@ def main(name):
     elif begin.find(b"OggS")!=-1:
         print("Data identified as OGG")
         output="ogg"
+        folder="Sounds"
+    elif begin.find(b"matroska")!=-1:
+        print("Data identified as Matroska? Assuming MP3 output.")
+        output="mp3"
         folder="Sounds"
     elif begin.find(b"KTX ")!=-1:
         print("Data identified as Khronos Texture")
@@ -141,6 +151,19 @@ def main(name):
         out=open("assets/"+folder+"/locale-"+locale+".json","wb")
         out.write(cont)
         out.close()
+    elif output=="mesh":
+        meshVersion=cont[0:12].decode('iso-8859-15')
+        numOnlyVer=meshVersion[8:12]
+        noDotVer=numOnlyVer.replace(".","")
+        if meshVersion in supported_mesh_versions:
+            pass
+        else:
+            print("Mesh version {} unsupported! Dumping raw file.".format(numOnlyVer))
+            if not path.isdir("assets/"+folder):
+                system('mkdir "assets/'+folder+'" >nul 2>&1')
+            out=open("assets/{}/{}.bm{}".format(folder,outhash,noDotVer),"wb")
+            out.write(cont)
+            out.close()
     elif output!=None:
         if not path.isdir("assets/"+folder):
             system('mkdir "assets/'+folder+'" >nul 2>&1')
