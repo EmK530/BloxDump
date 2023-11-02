@@ -75,7 +75,7 @@ def main(name):
     elif begin.find(b"<roblox xml")!=-1:
         return debug("Ignoring unsupported XML file.")
     elif begin.find(b"version")!=-1:
-        return debug("Ignoring unknown file.")
+        return debug("Ignoring unsupported mesh file.")
     elif begin.find(b'{"locale":"')!=-1:
         print("Data identified as JSON translation")
         output="translation"
