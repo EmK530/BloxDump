@@ -206,7 +206,24 @@ void thread(string name)
     }
     else if (output == "mesh")
     {
-        // TODO - port over BloxMesh to parse Roblox .mesh
+        string meshVersion = System.Text.Encoding.UTF8.GetString(cont)[..12];
+        string numOnlyVer = meshVersion[8..];
+        string noDotVer = numOnlyVer.Replace(".", "");
+        if (supported_mesh_versions.Contains(meshVersion))
+        {
+            print("Converting mesh version " + numOnlyVer);
+            BloxMesh.Convert(cont, folder, outhash);
+        }
+        else
+        {
+            print("Mesh version " + numOnlyVer + " unsupported! Dumping raw file.");
+            folder = "Unsupported " + folder;
+            if (!Directory.Exists(curpath + "assets/" + folder))
+            {
+                system("cd \"" + curpath + "\" && mkdir \"assets/" + folder + "\" >nul 2>&1");
+            }
+            File.WriteAllBytes(curpath + "assets/" + folder + "/" + outhash + ".bm" + noDotVer, cont);
+        }
     }
     else if (output != null)
     {
