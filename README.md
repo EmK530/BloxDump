@@ -22,7 +22,7 @@ List of everything BloxDump can currently dump:<br>
 ## Supported mesh versions
 ✅ `version 1.00`<br>
 ✅ `version 1.01`<br>
-🔄 `version 2.00` <b>Credit: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
+✅ `version 2.00` <b>Credit: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
 ❌ `version 3.00`<br>
 ❌ `version 3.01`<br>
 ❌ `version 4.00`<br>
