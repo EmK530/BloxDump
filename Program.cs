@@ -175,7 +175,7 @@ void thread(string name)
         }
         system("cd \"" + curpath + "\" && pvrtextoolcli -i temp/" + outhash + ".ktx -noout -shh -d \"assets/" + folder + "/" + outhash + ".png\"");
         srgb2lin.convert("assets/" + folder + "/" + outhash + ".png");
-        system("del temp\\" + outhash + ".txt");
+        system("del temp\\" + outhash + ".ktx");
     }
     else if (output == "ttf")
     {
@@ -188,14 +188,14 @@ void thread(string name)
         {
             print("Downloading " + outname + "-" + js["faces"][j]["name"] + ".ttf...");
             var assetid = js["faces"][j]["assetId"].ToString().Split("rbxassetid://")[1];
-            var dl2 = client.GetStringAsync("https://assetdelivery.roblox.com/v1/asset?id=" + assetid);
+            var dl2 = client.GetByteArrayAsync("https://assetdelivery.roblox.com/v1/asset?id=" + assetid);
             dl2.Wait();
             if (dl.Status == TaskStatus.Faulted)
             {
                 warn("Download failed.");
                 return;
             }
-            File.WriteAllText(curpath + "assets/" + folder + "/" + outname + "-" + js["faces"][j]["name"] + ".ttf", dl2.Result);
+            File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + "-" + js["faces"][j]["name"] + ".ttf", dl2.Result);
         }
     }
     else if (output == "translation")
