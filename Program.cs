@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
+using System.Reflection;
 
 #pragma warning disable CS0219
 #pragma warning disable CS8321
@@ -15,7 +16,7 @@ void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m
 void warn(string input) { Console.WriteLine("\x1b[6;30;43m" + "WARN" + "\x1b[0m " + input); }
 void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0m " + input); }
 
-string curpath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\";
+string curpath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\";
 
 void system(string cmd)
 {
@@ -68,7 +69,7 @@ void thread(string name)
         debug("Ignoring blocked hash.");
         return;
     }
-    var dl = client.GetStringAsync(link);
+    var dl = client.GetByteArrayAsync(link);
     while (true)
     {
         if (dl.Status == TaskStatus.Faulted)
@@ -81,8 +82,8 @@ void thread(string name)
         }
     }
     dl.Wait();
-    string cont = dl.Result;
-    string begin = cont[..48];
+    byte[] cont = dl.Result;
+    string begin = Encoding.UTF8.GetString(cont[..48]);
     string output = null;
     string folder = null;
     if (begin.Contains("<roblox!"))
@@ -164,7 +165,7 @@ void thread(string name)
     }
     if (output == "ktx")
     {
-        File.WriteAllText(curpath + "temp/" + outhash + ".ktx", cont);
+        File.WriteAllBytes(curpath + "temp/" + outhash + ".ktx", cont);
         while (true)
         {
             if (File.Exists(curpath + "temp/" + outhash + ".ktx"))
@@ -179,7 +180,7 @@ void thread(string name)
     {
         var js = JsonObject.Parse(cont);
         var outname = js["name"];
-        File.WriteAllText(curpath + "assets/" + folder + "/" + outname + ".json", cont);
+        File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + ".json", cont);
         Thread.Sleep(100);
         print("Found " + js["faces"].ToString().Length + " fonts");
         for (int j = 0; j < js["faces"].ToString().Length; j++)
@@ -244,5 +245,3 @@ while (true)
     print("Ripping loop completed.");
     Thread.Sleep(10000);
 }
-
-//srgb2lin.convert();
