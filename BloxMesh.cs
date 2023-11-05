@@ -40,12 +40,12 @@ public static class BloxMesh
         {
             string? version = reader.ReadLine();
             int num_faces = Int32.Parse(reader.ReadLine());
-            var content = JsonObject.Parse("[" + reader.ReadLine().Replace("][","],[")+"]");
+            var content = JsonObject.Parse("[" + reader.ReadLine().Replace("][", "],[") + "]");
             int true_faces = content.AsArray().Count / 3;
             debug("[BloxMesh_v1] Mesh is version " + version + " and has " + num_faces + " faces.");
             if (Directory.Exists(curpath + "assets/" + folderName))
             {
-                system("cd \"" + curpath + "\" && mkdir \"assets/"+folderName+"\" >nul 2>&1");
+                system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
             }
             var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + ".obj", FileMode.OpenOrCreate);
             fileOut.Write(Encoding.UTF8.GetBytes("# Converted from Roblox Mesh " + version + " to obj by BloxDump"));
@@ -62,19 +62,19 @@ public static class BloxMesh
                 var uv = content[i * 3 + 2];
                 if (version == "version 1.00")
                 {
-                    vertData.Insert(vertData.Length, "\nv " + (double)vert[0] / 2 + " " + (double)vert[1] / 2 + " " + (double)vert[2] / 2);
+                    vertData=vertData.Insert(vertData.Length, "\nv " + (double)vert[0] / 2 + " " + (double)vert[1] / 2 + " " + (double)vert[2] / 2).Replace(",", ".");
                 }
                 else
                 {
-                    vertData.Insert(vertData.Length, "\nv " + (double)vert[0] + " " + (double)vert[1] + " " + (double)vert[2]);
+                    vertData=vertData.Insert(vertData.Length, "\nv " + (double)vert[0] + " " + (double)vert[1] + " " + (double)vert[2]).Replace(",", ".");
                 }
-                normData.Insert(normData.Length, "\nvn " + (double)norm[0] + " " + (double)norm[1] + " " + (double)norm[2]);
-                texData.Insert(normData.Length, "\nvt " + (double)uv[0] + " " + (1.0 - (double)uv[1]) + " " + (double)uv[2]);
+                normData=normData.Insert(normData.Length, "\nvn " + (double)norm[0] + " " + (double)norm[1] + " " + (double)norm[2]).Replace(",", ".");
+                texData=texData.Insert(texData.Length, "\nvt " + (double)uv[0] + " " + (1.0 - (double)uv[1]) + " " + (double)uv[2]).Replace(",",".");
             }
             for (int i = 0; i < (loops - 1) / 3; i++)
             {
                 var pos = (i * 3 + 1);
-                faceData.Insert(faceData.Length, "\nf " + pos + " " + pos + " " + pos + " " + (pos+1) + " " + (pos + 1) + " " + (pos + 1) + " " + (pos + 2) + " " + (pos + 2) + " " + (pos + 2));
+                faceData=faceData.Insert(faceData.Length, "\nf " + pos + "/" + pos + "/" + pos + " " + (pos + 1) + "/" + (pos + 1) + "/" + (pos + 1) + " " + (pos + 2) + "/" + (pos + 2) + "/" + (pos + 2));
             }
             fileOut.Write(Encoding.UTF8.GetBytes(vertData));
             fileOut.Write(Encoding.UTF8.GetBytes(normData));
