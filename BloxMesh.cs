@@ -13,7 +13,9 @@ public static class BloxMesh
     {
         "version 1.00",
         "version 1.01",
-        "version 2.00"
+        "version 2.00",
+        "version 3.00",
+        "version 3.01",
     };
     private static string curpath = System.IO.Path.GetDirectoryName(System.AppContext.BaseDirectory) + "\\";
 
@@ -29,7 +31,7 @@ public static class BloxMesh
         process.WaitForExit();
     }
 
-    private static bool db = false;
+    private static bool db = true;
 
     private static void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
     private static void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
@@ -50,6 +52,101 @@ public static class BloxMesh
         public uint a; // 1st Vertex Index
         public uint b; // 2nd Vertex Index
         public uint c; // 3rd Vertex Index
+    }
+
+    private static void version3(byte[] data, string folderName, string outhash) // this uses v200 vertex and face structs because the only difference is LOD support!
+    {
+        string? version = Encoding.UTF8.GetString(data[..12]);
+        data = data[13..];
+        Stream stream = new MemoryStream(data);
+        BinaryReader reader = new BinaryReader(stream);
+        ushort szmeshHeader = reader.ReadUInt16();
+        byte szvertex = reader.ReadByte();
+        byte szface = reader.ReadByte();
+        ushort szLOD = reader.ReadUInt16();
+        ushort cLODs = reader.ReadUInt16();
+        uint cverts = reader.ReadUInt32();
+        uint cfaces = reader.ReadUInt32();
+        debug("[BloxMesh_v1] Mesh is version " + version + " and has " + cfaces + " faces.");
+        debug("[BloxMesh_v1] Version 3 mesh convertion will ONLY convert the highest level of detail.");
+        debug(szmeshHeader + " MHSize, " + szvertex + " VSize, " + szface + " FSize, " + szLOD + " LODSize, " + cverts + " VCount, " + cfaces + " FCount, " + cLODs + " LODCount");
+        if (!Directory.Exists(curpath + "assets/" + folderName))
+        {
+            system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
+        }
+        var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + "-v" + version[8..] + ".obj", FileMode.OpenOrCreate);
+        fileOut.Write(Encoding.UTF8.GetBytes("# Converted from Roblox Mesh " + version + " to obj by BloxDump"));
+        try
+        {
+            v200Vertex[] verticies = new v200Vertex[cverts];
+            v200Face[] faces = new v200Face[cfaces];
+            for (int i = 0; i < cverts; i++)
+            {
+                verticies[i].px = reader.ReadSingle();
+                verticies[i].py = reader.ReadSingle();
+                verticies[i].pz = reader.ReadSingle();
+                verticies[i].nx = reader.ReadSingle();
+                verticies[i].ny = reader.ReadSingle();
+                verticies[i].nz = reader.ReadSingle();
+                verticies[i].tu = reader.ReadSingle();
+                verticies[i].tv = reader.ReadSingle();
+                verticies[i].tw = 0x0;
+                verticies[i].tx = reader.ReadSByte();
+                verticies[i].ty = reader.ReadSByte();
+                verticies[i].tz = reader.ReadSByte();
+                verticies[i].ts = reader.ReadSByte();
+                if (szvertex == 40)
+                {
+                    verticies[i].r = reader.ReadByte();
+                    verticies[i].g = reader.ReadByte();
+                    verticies[i].b = reader.ReadByte();
+                    verticies[i].a = reader.ReadByte();
+                }
+                else
+                {
+                    verticies[i].r = 0xff;
+                    verticies[i].g = 0xff;
+                    verticies[i].b = 0xff;
+                    verticies[i].a = 0xff;
+                }
+            }
+            for (int i = 0; i < cfaces; i++)
+            {
+                faces[i].a = reader.ReadUInt32() + 1;
+                faces[i].b = reader.ReadUInt32() + 1;
+                faces[i].c = reader.ReadUInt32() + 1;
+            }
+            uint[] meshLODs = new uint[cLODs];
+            for (int i = 0; i < cLODs; i++)
+            {
+                meshLODs[i] = reader.ReadUInt32();
+            }
+
+            string vertData = "";
+            string texData = "";
+            string normData = "";
+            string faceData = "";
+            foreach (v200Vertex vert in verticies)
+            {
+                vertData = vertData.Insert(vertData.Length, "\nv " + vert.px + " " + vert.py + " " + vert.pz).Replace(",", ".");
+                normData = normData.Insert(normData.Length, "\nvn " + vert.nx + " " + vert.ny + " " + vert.nz).Replace(",", ".");
+                texData = texData.Insert(texData.Length, "\nvt " + vert.tu + " " + vert.tv + " 0").Replace(",", ".");
+            }
+            for (int i = 0; i < meshLODs[1]; i++)
+            {
+                var face = faces[i];
+                faceData = faceData.Insert(faceData.Length, "\nf " + face.a + "/" + face.a + "/" + face.a + " " + face.b + "/" + face.b + "/" + face.b + " " + face.c + "/" + face.c + "/" + face.c);
+            }
+            fileOut.Write(Encoding.UTF8.GetBytes(vertData));
+            fileOut.Write(Encoding.UTF8.GetBytes(normData));
+            fileOut.Write(Encoding.UTF8.GetBytes(texData));
+            fileOut.Write(Encoding.UTF8.GetBytes(faceData));
+            fileOut.Close();
+        }
+        catch (Exception e)
+        {
+            error("Error! " + e.Message);
+        }
     }
 
     private static void version2(byte[] data, string folderName, string outhash)
@@ -204,6 +301,10 @@ public static class BloxMesh
         else if (numOnlyVer == "2.00")
         {
             version2(data, folderName, outhash);
+        }
+        else if (numOnlyVer == "3.00" || numOnlyVer == "3.01")
+        {
+            version3(data, folderName, outhash);
         }
     }
 }
