@@ -15,7 +15,7 @@ public static class BloxMesh
         "version 1.01",
         // "version 2.00"
     };
-    private static string curpath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\";
+    private static string curpath = System.IO.Path.GetDirectoryName(System.AppContext.BaseDirectory) + "\\";
 
     private static void system(string cmd)
     {
