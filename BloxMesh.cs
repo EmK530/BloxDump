@@ -31,7 +31,7 @@ public static class BloxMesh
         process.WaitForExit();
     }
 
-    private static bool db = true;
+    private static bool db = false;
 
     private static void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
     private static void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
