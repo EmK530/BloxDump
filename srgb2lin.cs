@@ -33,7 +33,7 @@ public static class srgb2lin
                 data[y, x, c] = (byte)Math.Floor(srgb2lin(data[y, x, c]) / 2058.61501702);
             }
         }
-        Image<Rgba, byte> newi = new Image<Rgba, byte>(data);
+        Image<Bgra, byte> newi = new Image<Bgra, byte>(data);
         newi.Save(outPath);
     }
 }
