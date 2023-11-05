@@ -41,7 +41,7 @@ public static class BloxMesh
             string? version = reader.ReadLine();
             int num_faces = Int32.Parse(reader.ReadLine());
             var content = JsonObject.Parse("[" + reader.ReadLine().Replace("][","],[")+"]");
-            int true_faces = content.ToJsonString().Length/3;
+            int true_faces = content.AsArray().Count / 3;
             debug("[BloxMesh_v1] Mesh is version " + version + " and has " + num_faces + " faces.");
             if (Directory.Exists(curpath + "assets/" + folderName))
             {
@@ -57,7 +57,7 @@ public static class BloxMesh
             for (int i = 0; i < true_faces; i++)
             {
                 loops++;
-                var vert = content[i * 3]; // This line is broken at the moment. We are working on a solution!
+                var vert = content[i * 3];
                 var norm = content[i * 3 + 1];
                 var uv = content[i * 3 + 2];
                 if (version == "version 1.00")
