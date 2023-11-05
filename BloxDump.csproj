@@ -10,7 +10,12 @@
     <SelfContained>true</SelfContained>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <ApplicationIcon>BloxDump.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="BloxDump.ico" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Emgu.CV.runtime.windows" Version="4.8.1.5350" />
