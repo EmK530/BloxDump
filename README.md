@@ -5,7 +5,7 @@
   <br>
 </h1>
 <p align="center">
-  A C# program that goes through Roblox's CDN cache and dumps any recognized files.<br>
+  A program that goes through Roblox's CDN cache and dumps any recognized files.<br>
   This essentially lets you dump assets from any Roblox game and Roblox in general.
 </p>
 
