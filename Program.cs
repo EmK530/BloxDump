@@ -171,9 +171,9 @@ async Task thread(string name)
     else
     {
         warn("File unrecognized: " + begin);
-        output = "unkn";
-        folder = "Unknown";
-        //return;
+        //output = "unkn";
+        //folder = "Unknown";
+        return;
     }
     if (!Directory.Exists(curpath + "/temp"))
     {
