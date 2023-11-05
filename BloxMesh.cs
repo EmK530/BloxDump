@@ -29,7 +29,9 @@ public static class BloxMesh
         process.WaitForExit();
     }
 
-    private static void debug(string input) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); }
+    private static bool db = false;
+
+    private static void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
     private static void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
     private static void warn(string input) { Console.WriteLine("\x1b[6;30;43m" + "WARN" + "\x1b[0m " + input); }
     private static void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0m " + input); }
