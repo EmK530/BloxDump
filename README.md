@@ -7,6 +7,8 @@
 <p align="center">
   A simple Python script that goes through Roblox's CDN cache and dumps any recognized files.<br>
   This essentially lets you dump assets from any Roblox game and Roblox in general.
+  This is the C# branch, and this branch is in a very unfinished state. We are working on improvements.
+  Any help appreciated.
 </p>
 
 ## Support
