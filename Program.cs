@@ -16,7 +16,7 @@ void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m
 void warn(string input) { Console.WriteLine("\x1b[6;30;43m" + "WARN" + "\x1b[0m " + input); }
 void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0m " + input); }
 
-string curpath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\";
+string curpath = System.IO.Path.GetDirectoryName(System.AppContext.BaseDirectory) + "\\";
 
 void system(string cmd)
 {
@@ -241,6 +241,8 @@ async Task thread(string name)
     }
 }
 
+Console.Clear();
+system("cls");
 Console.Title = "BloxDump | Prompt";
 warn("Multithreading is not developed yet.\n");
 Console.WriteLine("Do you want to clear Roblox's cache?");
