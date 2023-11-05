@@ -2,12 +2,12 @@ using System.Diagnostics;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
-using System.Reflection;
 
 #pragma warning disable CS0219
 #pragma warning disable CS8321
 #pragma warning disable CS8600
 #pragma warning disable CS8602
+#pragma warning disable CS8604
 
 bool db = true;
 
@@ -16,7 +16,7 @@ void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m
 void warn(string input) { Console.WriteLine("\x1b[6;30;43m" + "WARN" + "\x1b[0m " + input); }
 void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0m " + input); }
 
-string curpath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "\\";
+string curpath = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "\\";
 
 void system(string cmd)
 {
@@ -24,7 +24,7 @@ void system(string cmd)
     ProcessStartInfo startInfo = new ProcessStartInfo();
     startInfo.WindowStyle = ProcessWindowStyle.Hidden;
     startInfo.FileName = "cmd.exe";
-    startInfo.Arguments = "/C "+cmd;
+    startInfo.Arguments = "/C " + cmd;
     process.StartInfo = startInfo;
     process.Start();
     process.WaitForExit();
@@ -50,9 +50,9 @@ void thread(string name)
 {
     byte[] data = File.ReadAllBytes(name);
     string dataString = Encoding.UTF8.GetString(data[0..(data.Length > 128 ? 128 : data.Length)]);
-    if (dataString.Substring(0,4) != "RBXH")
+    if (dataString.Substring(0, 4) != "RBXH")
     {
-        debug("Ignoring non-RBXH file: "+name);
+        debug("Ignoring non-RBXH file: " + name);
         return;
     }
     string link = dataString.Substring(dataString.IndexOf("https://")).Split("\x00")[0];
@@ -173,19 +173,20 @@ void thread(string name)
                 break;
             }
         }
-        system("cd \"" + curpath + "\" && pvrtextoolcliy -i temp/" + outhash + ".ktx -noout -shh -d \"assets/" + folder + "/" + outhash + ".png\"");
+        system("cd \"" + curpath + "\" && pvrtextoolcli -i temp/" + outhash + ".ktx -noout -shh -d \"assets/" + folder + "/" + outhash + ".png\"");
         srgb2lin.convert("assets/" + folder + "/" + outhash + ".png");
         system("del temp\\" + outhash + ".txt");
-    } else if (output == "ttf")
+    }
+    else if (output == "ttf")
     {
-        var js = JsonObject.Parse(cont);
+        var js = JsonObject.Parse(System.Text.Encoding.UTF8.GetString(cont));
         var outname = js["name"];
         File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + ".json", cont);
         Thread.Sleep(100);
         print("Found " + js["faces"].ToString().Length + " fonts");
         for (int j = 0; j < js["faces"].ToString().Length; j++)
         {
-            print("Downloading " + outname + "-" + js["faces"][j]["name"]+".ttf...");
+            print("Downloading " + outname + "-" + js["faces"][j]["name"] + ".ttf...");
             var assetid = js["faces"][j]["assetId"].ToString().Split("rbxassetid://")[1];
             var dl2 = client.GetStringAsync("https://assetdelivery.roblox.com/v1/asset?id=" + assetid);
             dl2.Wait();
@@ -196,11 +197,20 @@ void thread(string name)
             }
             File.WriteAllText(curpath + "assets/" + folder + "/" + outname + "-" + js["faces"][j]["name"] + ".ttf", dl2.Result);
         }
-    } else if (output == "translation")
+    }
+    else if (output == "translation")
     {
-        // TODO - add the rest of the support
-    } else {
-        // TODO - add raw output
+        var js = JsonObject.Parse(System.Text.Encoding.UTF8.GetString(cont));
+        var locale = js["locale"];
+        File.WriteAllBytes(curpath + "assets/" + folder + "/locale-" + locale + ".json", cont);
+    }
+    else if (output == "mesh")
+    {
+        // TODO - port over BloxMesh to parse Roblox .mesh
+    }
+    else if (output != null)
+    {
+        File.WriteAllBytes(curpath + "assets/" + folder + "/" + outhash + "." + output, cont);
     }
 }
 
@@ -224,11 +234,11 @@ while (true)
     int counts = 0;
     string[] files = Directory.GetFiles(tempPath);
     int total = files.Length;
-    foreach(string i in files)
+    foreach (string i in files)
     {
         string name = i.Split("\\http\\")[1];
         counts++;
-        Console.Title = "BloxDump | Processing file "+counts+"/"+total+" ("+name+")";
+        Console.Title = "BloxDump | Processing file " + counts + "/" + total + " (" + name + ")";
         if (!name.StartsWith("RBX"))
         {
             if (!known.Contains(name))
@@ -236,7 +246,8 @@ while (true)
                 known.Add(name);
                 thread(i);
             }
-        } else
+        }
+        else
         {
             warn("Ignoring temporary file: " + name);
         }
