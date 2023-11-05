@@ -9,14 +9,29 @@ using System.Text.Json.Nodes;
 #pragma warning disable CS8602
 #pragma warning disable CS8604
 
-bool db = true;
+bool db = false;
 
-void debug(string input) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); }
+void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
 void warn(string input) { Console.WriteLine("\x1b[6;30;43m" + "WARN" + "\x1b[0m " + input); }
 void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0m " + input); }
 
 string curpath = System.IO.Path.GetDirectoryName(System.AppContext.BaseDirectory) + "\\";
+int max_threads = Environment.ProcessorCount;
+List<Task> threads = new List<Task>();
+
+void check_thread_life()
+{
+    List<Task> still_alive = new List<Task>();
+    foreach (Task a in threads)
+    {
+        if (!a.IsCompleted)
+        {
+            still_alive.Add(a);
+        }
+    }
+    threads = still_alive;
+}
 
 void system(string cmd)
 {
@@ -73,13 +88,15 @@ async Task thread(string name)
         return;
     }
     byte[] cont = null;
-    while (true) {
+    while (true)
+    {
         HttpResponseMessage resp = await client.GetAsync(link);
         if (resp.IsSuccessStatusCode)
         {
             cont = await resp.Content.ReadAsByteArrayAsync();
             break;
-        } else
+        }
+        else
         {
             warn("Download failed, retrying...");
         }
@@ -243,15 +260,18 @@ async Task thread(string name)
 
 Console.Clear();
 system("cls");
+//those clears ensure that the print labels work
 Console.Title = "BloxDump | Prompt";
-warn("Multithreading is not developed yet.\n");
+print("Thread limit: "+max_threads+" threads.");
+print("Please note that this is intended to utilize maximum CPU to dump assets and adjusts to your CPU.\n");
 Console.WriteLine("Do you want to clear Roblox's cache?");
 Console.WriteLine("Clearing cache will prevent ripping of anything from previous game sessions.");
 Console.WriteLine("Do this if you want to let BloxRip work in real-time while you're playing.");
 Console.Write("Type Y to clear or anything else to proceed: ");
 if (Console.ReadLine().ToLower() == "y")
 {
-    print("\nDeleting Roblox cache...");
+    Console.WriteLine();
+    print("Deleting Roblox cache...");
     system("del " + tempPath + "* /q");
 }
 Console.Clear();
@@ -273,7 +293,13 @@ while (true)
             if (!known.Contains(name))
             {
                 known.Add(name);
-                await thread(i);
+                check_thread_life();
+                while (threads.Count >= max_threads)
+                {
+                    Thread.Sleep(100);
+                    check_thread_life();
+                }
+                threads.Add(Task.Run(() => thread(i)));
             }
         }
         else
