@@ -1,4 +1,4 @@
-// Script made by zuzaratrust and EmK530
+﻿// Script made by zuzaratrust and EmK530
 
 using Emgu.CV;
 using Emgu.CV.Structure;
