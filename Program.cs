@@ -262,8 +262,33 @@ Console.Clear();
 system("cls");
 //those clears ensure that the print labels work
 Console.Title = "BloxDump | Prompt";
-print("Thread limit: "+max_threads+" threads.");
-print("Please note that this is intended to utilize maximum CPU to dump assets and adjusts to your CPU.\n");
+Console.WriteLine("How many threads do you want to use?");
+Console.WriteLine("Your CPU has "+Environment.ProcessorCount+" threads. Please input a number less or equal to it.");
+Console.WriteLine("More threads = faster, more CPU usage.");
+while(true){
+    Console.Write("\nInput: ");
+    string input = Console.ReadLine();
+    int desiredThreads;
+    if(int.TryParse(input, out desiredThreads)){
+        if(desiredThreads>max_threads){
+            Console.WriteLine("\nAre you sure you want to use this amount of threads?");
+            Console.Write("Type Y to confirm: ");
+            if (Console.ReadLine().ToLower() == "y")
+            {
+                Console.WriteLine();
+                max_threads = desiredThreads;
+                break;
+            }
+        } else {
+            Console.WriteLine();
+            max_threads = desiredThreads;
+            break;
+        }
+    } else {
+        Console.WriteLine("Invalid input!");
+    }
+}
+print("Thread limit: "+max_threads+" threads.\n");
 Console.WriteLine("Do you want to clear Roblox's cache?");
 Console.WriteLine("Clearing cache will prevent ripping of anything from previous game sessions.");
 Console.WriteLine("Do this if you want to let BloxRip work in real-time while you're playing.");
