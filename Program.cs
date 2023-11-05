@@ -209,7 +209,7 @@ void thread(string name)
         string meshVersion = System.Text.Encoding.UTF8.GetString(cont)[..12];
         string numOnlyVer = meshVersion[8..];
         string noDotVer = numOnlyVer.Replace(".", "");
-        if (supported_mesh_versions.Contains(meshVersion))
+        if (BloxMesh.supported_mesh_versions.Contains(meshVersion))
         {
             print("Converting mesh version " + numOnlyVer);
             BloxMesh.Convert(cont, folder, outhash);
