@@ -33,20 +33,23 @@ void system(string cmd)
 string tempPath = Path.GetTempPath() + "Roblox\\http\\";
 List<string> known = new List<string>();
 List<string> knownlinks = new List<string>();
-string[] bans = 
+string[] bans =
 {
     "noFilter",
     "Png",
     "isCircular"
 };
 
-using HttpClient client = new();
+using HttpClient client = new HttpClient(new HttpClientHandler
+{
+    AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
+});
 client.DefaultRequestHeaders.Accept.Clear();
 client.DefaultRequestHeaders.Accept.Add(
-    new MediaTypeWithQualityHeaderValue("text/plain"));
+    new MediaTypeWithQualityHeaderValue("binary/octet-stream"));
 client.DefaultRequestHeaders.Add("User-Agent", "BloxDump");
 
-void thread(string name)
+async Task thread(string name)
 {
     byte[] data = File.ReadAllBytes(name);
     string dataString = Encoding.UTF8.GetString(data[0..(data.Length > 128 ? 128 : data.Length)]);
@@ -69,20 +72,18 @@ void thread(string name)
         debug("Ignoring blocked hash.");
         return;
     }
-    var dl = client.GetByteArrayAsync(link);
-    while (true)
-    {
-        if (dl.Status == TaskStatus.Faulted)
+    byte[] cont = null;
+    while (true) {
+        HttpResponseMessage resp = await client.GetAsync(link);
+        if (resp.IsSuccessStatusCode)
+        {
+            cont = await resp.Content.ReadAsByteArrayAsync();
+            break;
+        } else
         {
             warn("Download failed, retrying...");
         }
-        else
-        {
-            break;
-        }
     }
-    dl.Wait();
-    byte[] cont = dl.Result;
     string begin = Encoding.UTF8.GetString(cont[..48]);
     string output = null;
     string folder = null;
@@ -153,7 +154,9 @@ void thread(string name)
     else
     {
         warn("File unrecognized: " + begin);
-        return;
+        output = "unkn";
+        folder = "Unknown";
+        //return;
     }
     if (!Directory.Exists(curpath + "/temp"))
     {
@@ -188,14 +191,21 @@ void thread(string name)
         {
             print("Downloading " + outname + "-" + js["faces"][j]["name"] + ".ttf...");
             var assetid = js["faces"][j]["assetId"].ToString().Split("rbxassetid://")[1];
-            var dl2 = client.GetByteArrayAsync("https://assetdelivery.roblox.com/v1/asset?id=" + assetid);
-            dl2.Wait();
-            if (dl.Status == TaskStatus.Faulted)
+            byte[] fontdata = null;
+            while (true)
             {
-                warn("Download failed.");
-                return;
+                HttpResponseMessage resp = await client.GetAsync("https://assetdelivery.roblox.com/v1/asset?id=" + assetid);
+                if (resp.IsSuccessStatusCode)
+                {
+                    fontdata = await resp.Content.ReadAsByteArrayAsync();
+                    break;
+                }
+                else
+                {
+                    warn("Download failed, retrying...");
+                }
             }
-            File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + "-" + js["faces"][j]["name"] + ".ttf", dl2.Result);
+            File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + "-" + js["faces"][j]["name"] + ".ttf", fontdata);
         }
     }
     else if (output == "translation")
@@ -261,7 +271,7 @@ while (true)
             if (!known.Contains(name))
             {
                 known.Add(name);
-                thread(i);
+                await thread(i);
             }
         }
         else
