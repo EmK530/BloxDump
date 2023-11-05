@@ -33,7 +33,7 @@ void system(string cmd)
 string tempPath = Path.GetTempPath() + "Roblox\\http\\";
 List<string> known = new List<string>();
 List<string> knownlinks = new List<string>();
-List<string> bans = new List<string>
+string[] bans = 
 {
     "noFilter",
     "Png",
