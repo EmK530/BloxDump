@@ -151,7 +151,7 @@ public static class BloxMesh
             {
                 system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
             }
-            var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + "-" + version[8..] + ".obj", FileMode.OpenOrCreate);
+            var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + "-v" + version[8..] + ".obj", FileMode.OpenOrCreate);
             fileOut.Write(Encoding.UTF8.GetBytes("# Converted from Roblox Mesh " + version + " to obj by BloxDump"));
             string vertData = "";
             string texData = "";
