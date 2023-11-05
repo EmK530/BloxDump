@@ -26,7 +26,7 @@ List of everything BloxDump can currently dump:<br>
 🔄 `version 3.00` <b>In charge: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
 🔄 `version 3.01` <b>In charge: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
 🔄 `version 4.00` <b>In charge: [EmK530](https://github.com/EmK530)</b><br>
-❌ `version 4.01`<br>
+🔄 `version 4.01` <b>In charge: [EmK530](https://github.com/EmK530)</b><br>
 ❌ `version 5.00`<br>
 ❌ `version 6.00`<br><br>
 <b>More support is in the works, stay tuned!</b>
