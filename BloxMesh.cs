@@ -1,9 +1,4 @@
-﻿using Emgu.CV.Util;
-using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime.Intrinsics;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -14,7 +9,7 @@ using System.Text.Json.Nodes;
 
 public static class BloxMesh
 {
-    private static string[] supported_mesh_versions =
+    public static string[] supported_mesh_versions =
     {
         "version 1.00",
         "version 1.01",
