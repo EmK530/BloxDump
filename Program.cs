@@ -299,7 +299,7 @@ while (true)
 }
 print("Thread limit: " + max_threads + " threads.\n");
 
-#if DEBUG
+#if !DEBUG
 
 /*
 
