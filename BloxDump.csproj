@@ -22,5 +22,6 @@
 
     <ItemGroup>
         <PackageReference Include="SixLabors.ImageSharp" Version="3.0.2" />
+        <PackageReference Include="System.Management" Version="7.0.0" />
     </ItemGroup>
 </Project>
