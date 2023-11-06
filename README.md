@@ -20,13 +20,13 @@ List of everything BloxDump can currently dump:<br>
 <b>Translations (JSON)</b><br>
 
 ## Supported mesh versions
-✅ `version 1.00`<br>
-✅ `version 1.01`<br>
-✅ `version 2.00` <b>Credit: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-✅ `version 3.00` <b>Credit: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-✅ `version 3.01` <b>Credit: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-⚠️ `version 4.00` <b>Currently unstable, some meshes may be broken.</b><br>
-⚠️ `version 4.01` <b>Currently unstable, some meshes may be broken.</b><br>
+✅ `version 1.00` <b>By: [EmK530](https://github.com/EmK530)</b><br>
+✅ `version 1.01` <b>By: [EmK530](https://github.com/EmK530)</b><br>
+✅ `version 2.00` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
+✅ `version 3.00` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
+✅ `version 3.01` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
+⚠️ `version 4.00` <b>By: [EmK530](https://github.com/EmK530) | Bugfixer: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
+⚠️ `version 4.01` <b>By: [EmK530](https://github.com/EmK530) | Bugfixer: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
 ❌ `version 5.00`<br>
 ❌ `version 6.00` <b>Currently unused by Roblox</b><br><br>
 <b>More support is in the works, stay tuned!</b>
