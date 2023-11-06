@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
+using System.Management;
+using System.Security.Cryptography;
 
 #pragma warning disable CS0219
 #pragma warning disable CS8321
@@ -263,14 +265,17 @@ system("cls");
 //those clears ensure that the print labels work
 Console.Title = "BloxDump | Prompt";
 Console.WriteLine("How many threads do you want to use?");
-Console.WriteLine("Your CPU has "+Environment.ProcessorCount+" threads. Please input a number less or equal to it.");
+Console.WriteLine("Your CPU has " + Environment.ProcessorCount + " threads. Please input a number less or equal to it.");
 Console.WriteLine("More threads = faster, more CPU usage.");
-while(true){
+while (true)
+{
     Console.Write("\nInput: ");
     string input = Console.ReadLine();
     int desiredThreads;
-    if(int.TryParse(input, out desiredThreads)){
-        if(desiredThreads>max_threads){
+    if (int.TryParse(input, out desiredThreads))
+    {
+        if (desiredThreads > max_threads)
+        {
             Console.WriteLine("\nAre you sure you want to use this amount of threads?");
             Console.Write("Type Y to confirm: ");
             if (Console.ReadLine().ToLower() == "y")
@@ -279,19 +284,126 @@ while(true){
                 max_threads = desiredThreads;
                 break;
             }
-        } else {
+        }
+        else
+        {
             Console.WriteLine();
             max_threads = desiredThreads;
             break;
         }
-    } else {
+    }
+    else
+    {
         Console.WriteLine("Invalid input!");
     }
 }
-print("Thread limit: "+max_threads+" threads.\n");
+print("Thread limit: " + max_threads + " threads.\n");
+
+#if !DEBUG
+
+/*
+
+THIS BLACKLIST HAS BEEN CREATED IN RESPONSE TO A FEW SMALL CONCERNED CREATORS
+NO LARGE GAMES ARE ON HERE, DO NOT WORRY ABOUT CIRCUMVENTING AND PLEASE RESPECT THESE CREATORS
+
+ROBLOX COMMAND LINE ONLY RETRIEVED TO DETECT PLACE ID
+
+*/
+
+static string GetCommandLine(int processId)
+{
+    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher($"SELECT CommandLine FROM Win32_Process WHERE ProcessId = {processId}"))
+    using (ManagementObjectCollection objects = searcher.Get())
+    {
+        foreach (ManagementBaseObject obj in objects)
+        {
+            var property = obj.Properties["CommandLine"];
+            if (property != null)
+            {
+                return property.Value.ToString();
+            }
+        }
+    }
+    return null;
+}
+
+static string PBKDF2Hash(string input)
+{
+    byte[] bytes = Encoding.UTF8.GetBytes(input);
+    ulong sd;
+    if (!ulong.TryParse(input, out sd))
+    {
+        throw new Exception("Something went wrong checking the blacklist, please report as issue ID 1.");
+    }
+    int seed = (int)(sd % 2147483648);
+    Random random = new Random(seed);
+    byte[] salt = new byte[16];
+    random.NextBytes(salt);
+    int iterations = 1000000;
+    using (Rfc2898DeriveBytes pbkdf2 = new Rfc2898DeriveBytes(bytes, salt, iterations, HashAlgorithmName.SHA256))
+    {
+        byte[] hash = pbkdf2.GetBytes(32);
+        string hashBase64 = Convert.ToBase64String(hash);
+        return hashBase64;
+    }
+}
+
+print("Please wait...");
+HttpResponseMessage dl = await client.GetAsync("https://api.emk530.net/BDGAMEBLOCK.json");
+if (!dl.IsSuccessStatusCode)
+{
+    Console.Clear();
+    if ((int)dl.StatusCode == 521)
+    {
+        error("Could not retrieve blacklist because the API is down. Please wait for the server to come online.");
+    } else
+    {
+        error("Something went wrong with the blacklist download, error code: " + (int)dl.StatusCode);
+    }
+    Console.ReadLine();
+    Environment.Exit(1);
+}
+JsonArray ar = JsonObject.Parse((await dl.Content.ReadAsStringAsync())).AsArray();
+Process[] processes = Process.GetProcessesByName("RobloxPlayerBeta");
+if(processes.Length > 0)
+{
+    Console.Clear();
+    print("BloxDump dumps assets while you play, to get a fresh start please close Roblox.");
+    while(processes.Length > 0)
+    {
+        processes = Process.GetProcessesByName("RobloxPlayerBeta");
+        Thread.Sleep(250);
+    }
+}
+print("Deleting Roblox cache...");
+system("del " + tempPath + "* /q");
+Console.Clear();
+print("Open Roblox to begin dumping.");
+while (processes.Length == 0)
+{
+    processes = Process.GetProcessesByName("RobloxPlayerBeta");
+    Thread.Sleep(250);
+}
+print("Verifying permission to dump...");
+string placeId = GetCommandLine(processes[0].Id).Split("&placeId=")[1].Split("&")[0];
+string hashed = PBKDF2Hash(placeId);
+foreach (string i in ar)
+{
+    if (i == hashed)
+    {
+        Console.Clear();
+        warn("Per the request of this game's creator, you cannot dump assets from this place.");
+        Console.ReadLine();
+        Environment.Exit(2);
+    }
+}
+print("Permission granted, BloxDump ready.");
+
+#else
+
 Console.WriteLine("Do you want to clear Roblox's cache?");
 Console.WriteLine("Clearing cache will prevent ripping of anything from previous game sessions.");
-Console.WriteLine("Do this if you want to let BloxRip work in real-time while you're playing.");
+Console.WriteLine("Do this if you want to let BloxDump work in real-time while you're playing.");
 Console.Write("Type Y to clear or anything else to proceed: ");
 if (Console.ReadLine().ToLower() == "y")
 {
@@ -300,8 +412,11 @@ if (Console.ReadLine().ToLower() == "y")
     system("del " + tempPath + "* /q");
 }
 Console.Clear();
-Console.Title = "BloxDump | Idle";
 print("BloxDump started.");
+
+#endif
+
+Console.Title = "BloxDump | Idle";
 
 while (true)
 {
