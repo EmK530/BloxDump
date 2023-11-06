@@ -299,7 +299,7 @@ while (true)
 }
 print("Thread limit: " + max_threads + " threads.\n");
 
-#if !DEBUG
+#if DEBUG
 
 /*
 
@@ -365,7 +365,7 @@ if (!dl.IsSuccessStatusCode)
 }
 JsonArray ar = JsonObject.Parse((await dl.Content.ReadAsStringAsync())).AsArray();
 Process[] processes = Process.GetProcessesByName("RobloxPlayerBeta");
-if(processes.Length > 0)
+if(processes.Length > 0 && Directory.GetFiles(tempPath).Length > 0)
 {
     Console.Clear();
     print("BloxDump dumps assets while you play, to get a fresh start please close Roblox.");
@@ -385,7 +385,27 @@ while (processes.Length == 0)
     Thread.Sleep(250);
 }
 print("Verifying permission to dump...");
-string placeId = GetCommandLine(processes[0].Id).Split("&placeId=")[1].Split("&")[0];
+string cmd = GetCommandLine(processes[0].Id);
+if (!cmd.Contains("&placeId="))
+{
+    error("Could not find a placeId parameter in the Roblox command line, did you join from the website?");
+    Console.ReadLine();
+    Environment.Exit(2);
+}
+string placeId = cmd.Split("&placeId=")[1].Split("&")[0];
+ulong outparse;
+if (placeId == "")
+{
+    error("Roblox command line placeId parameter was empty.");
+    Console.ReadLine();
+    Environment.Exit(3);
+}
+if (!ulong.TryParse(placeId,out outparse))
+{
+    error("Roblox command line placeId parameter is not a valid number.");
+    Console.ReadLine();
+    Environment.Exit(4);
+}
 string hashed = PBKDF2Hash(placeId);
 foreach (string i in ar)
 {
