@@ -1,7 +1,7 @@
-﻿// Script made by zuzaratrust and EmK530
+// Script made by zuzaratrust and EmK530
 
-using Emgu.CV;
-using Emgu.CV.Structure;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 public static class srgb2lin
 {
@@ -20,19 +20,20 @@ public static class srgb2lin
             }
             return lin;
         }
-        Image<Bgra, byte> img = new Image<Bgra, byte>(outPath);
-        int height = img.Data.GetLength(0);
-        int width = img.Data.GetLength(1);
+        Image<Rgba32> img = Image.Load<Rgba32>(outPath);
         int y = -1;
         int x = 0;
-        for (int i = 0; i < height * width; i++)
+        for (int i = 0; i < img.Height * img.Width; i++)
         {
             y++;
-            if (y == height){y = 0;x++;}
-            for (int c = 0; c < 3; c++)
-            {
-                img.Data[y, x, c] = (byte)Math.Floor(srgb2lin(img.Data[y, x, c]) / 2058.61501702);
-            }
+            if (y == img.Height) {y = 0;x++;}
+            Rgba32 px = img[x, y];
+            img[x, y] = new Rgba32(
+                (byte)Math.Floor(srgb2lin(px.R) / 2058.61501702),
+                (byte)Math.Floor(srgb2lin(px.G) / 2058.61501702),
+                (byte)Math.Floor(srgb2lin(px.B) / 2058.61501702),
+                px.A
+            );
         }
         img.Save(outPath);
     }
