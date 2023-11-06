@@ -34,7 +34,7 @@ List of everything BloxDump can currently dump:<br>
 ## For Roblox game developers
 Do you want your game to be blocked from use with BloxDump release builds?<br>
 Contact EmK530 on Discord (emk530 / EmK530#0985) to request this.<br>
-Make sure to provide evidence that you are the game's creator of a developer of it.
+Make sure to provide evidence that you are the game's creator or a developer of it.
 
 ## Contributions
 If there is any file format that you want to add support for, feel free to make a pull request!<br>
