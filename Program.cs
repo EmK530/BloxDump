@@ -114,8 +114,11 @@ async Task thread(string name)
     }
     else if (begin.Contains("<roblox xml"))
     {
-        debug("Ignoring unsupported XML file.");
-        return;
+        //debug("Ignoring unsupported XML file.");
+        //return;
+        print("Data identified as RBXMX");
+        output = "rbxmx";
+        folder = "RBXMX Files";
     }
     else if (begin.Contains("version"))
     {
