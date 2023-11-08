@@ -386,13 +386,19 @@ while (processes.Length == 0)
 }
 print("Verifying permission to dump...");
 string cmd = GetCommandLine(processes[0].Id);
+string placeId = "";
 if (!cmd.Contains("&placeId="))
 {
-    error("Could not find a placeId parameter in the Roblox command line, did you join from the website?");
-    Console.ReadLine();
-    Environment.Exit(2);
+    if(!cmd.Contains("%26placeId%3D")){
+        error("Could not find a placeId parameter in the Roblox command line, did you join from the website?");
+        Console.ReadLine();
+        Environment.Exit(2);
+    } else {
+        placeId = cmd.Split("%26placeId%3D")[1].Split("%26")[0];
+    }
+} else {
+    placeId = cmd.Split("&placeId=")[1].Split("&")[0];
 }
-string placeId = cmd.Split("&placeId=")[1].Split("&")[0];
 ulong outparse;
 if (placeId == "")
 {
