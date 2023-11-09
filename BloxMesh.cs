@@ -154,7 +154,7 @@ public static class BloxMesh
             normData = normData.Insert(normData.Length, "\nvn " + vert.nx + " " + vert.ny + " " + vert.nz).Replace(",", ".");
             texData = texData.Insert(texData.Length, "\nvt " + vert.tu + " " + vert.tv + " 0").Replace(",", ".");
         }
-        for (int i = 0; i < lods[1]; i++)
+        for (int i = 0; i < (lodType==0 ? numFaces : lods[1]); i++)
         {
             var face = faces[i];
             faceData = faceData.Insert(faceData.Length, "\nf " + face.a + "/" + face.a + "/" + face.a + " " + face.b + "/" + face.b + "/" + face.b + " " + face.c + "/" + face.c + "/" + face.c);
