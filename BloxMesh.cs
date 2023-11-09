@@ -118,17 +118,12 @@ public static class BloxMesh
         ushort numSubsets = reader.ReadUInt16();
         byte numHighQualityLODs = reader.ReadByte();
         reader.ReadByte(); // skip unused byte
-        //collect verts
         v200Vertex[] verts = new v200Vertex[numVerts];
         verts = readVertices(reader, verts, numVerts, 40);
-        foreach(v200Vertex i in verts)
-        {
-            //print((i.px + "|" + i.py + "|" + i.pz).ToString());
-        }
         if (numBones > 0)
         {
-            debug("[BloxMesh_v4] This mesh has bones... PANIC!!! " + outhash);
-            reader.ReadBytes((int)(numBones*numVerts*2));
+            //skip bone data if present
+            reader.ReadBytes((int)(numVerts * 8));
         }
         v200Face[] faces = new v200Face[numFaces];
         for (int i = 0; i < numFaces; i++)
@@ -138,11 +133,11 @@ public static class BloxMesh
             faces[i].c = reader.ReadUInt32() + 1;
         }
         uint[] lods = new uint[numLODs];
-        for(int i = 0; i < numLODs; i++)
+        for (int i = 0; i < numLODs; i++)
         {
             lods[i] = reader.ReadUInt32();
         }
-        //there's probably more data but for obj files it doesn't matter right?
+        //beyond this point is data in the mesh that is ignored
         if (!Directory.Exists(curpath + "assets/" + folderName))
         {
             system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
