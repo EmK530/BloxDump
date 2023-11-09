@@ -114,13 +114,10 @@ async Task thread(string name)
     }
     else if (begin.Contains("<roblox xml"))
     {
-        //debug("Ignoring unsupported XML file.");
-        //return;
-        print("Data identified as RBXMX");
-        output = "rbxmx";
-        folder = "RBXMX Files";
+        debug("Ignoring unsupported XML file.");
+        return;
     }
-    else if (begin.Contains("version"))
+    else if (!begin.Contains("\"version") && begin.Contains("version"))
     {
         print("Data identified as a Roblox Mesh");
         output = "mesh";
@@ -254,7 +251,7 @@ async Task thread(string name)
             {
                 system("cd \"" + curpath + "\" && mkdir \"assets/" + folder + "\" >nul 2>&1");
             }
-            File.WriteAllBytes(curpath + "assets/" + folder + "/" + outhash + ".bm" + noDotVer, cont);
+            File.WriteAllBytes(curpath + "assets/" + folder + "/" + outhash + ".bm", cont);
         }
     }
     else if (output != null)
