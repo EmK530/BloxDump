@@ -15,7 +15,7 @@ List of everything BloxDump can currently dump:<br>
 <b>3D Textures (KTX => PNG)</b><br>
 <b>Animations (RBXM)</b><br>
 <b>Fonts (TTF)</b><br>
-<b>Meshes (OBJ)</b>  [[INCOMPLETE](https://github.com/EmK530/BloxDump/tree/main#supported-mesh-versions)]<br>
+<b>Meshes (OBJ)</b><br>
 <b>Sounds (OGG)</b><br>
 <b>Translations (JSON)</b><br>
 
@@ -29,7 +29,6 @@ List of everything BloxDump can currently dump:<br>
 ✅ `version 4.01` <b>By: [EmK530](https://github.com/EmK530)</b><br>
 ✅ `version 5.00` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
 ❌ `version 6.00` <b>Currently unused by Roblox</b><br><br>
-<b>More support is in the works, stay tuned!</b>
 
 ## For Roblox game developers
 Do you want your game to be blocked from use with BloxDump release builds?<br>
