@@ -18,7 +18,8 @@ public static class BloxMesh
         "version 3.00",
         "version 3.01",
         "version 4.00",
-        "version 4.01"
+        "version 4.01",
+        "version 5.00"
     };
     private static string curpath = System.IO.Path.GetDirectoryName(System.AppContext.BaseDirectory) + "\\";
 
@@ -95,6 +96,77 @@ public static class BloxMesh
             }
         }
         return verts;
+    }
+
+    private static void version5(byte[] data, string folderName, string outhash) // ZOMG V4 BUT WITH TWO IGNORED INTS IN MESHHEADER????? :flushed:
+    {
+        string? version = Encoding.UTF8.GetString(data[..12]);
+        Stream stream = new MemoryStream(data);
+        BinaryReader reader = new BinaryReader(stream);
+        reader.ReadBytes(13);
+        ushort sizeof_MeshHeader = reader.ReadUInt16();
+        if (sizeof_MeshHeader != 32)
+        {
+            error("[BloxMesh_v4] Mesh " + version + " had an incorrect header size: " + sizeof_MeshHeader + " bytes.");
+            return;
+        }
+        ushort lodType = reader.ReadUInt16();
+        uint numVerts = reader.ReadUInt32();
+        uint numFaces = reader.ReadUInt32();
+        ushort numLODs = reader.ReadUInt16();
+        ushort numBones = reader.ReadUInt16();
+        uint sizeof_boneNamesBuffer = reader.ReadUInt32();
+        ushort numSubsets = reader.ReadUInt16();
+        byte numHighQualityLODs = reader.ReadByte();
+        reader.ReadByte(); // skip unused byte
+        reader.ReadUInt32(); // unused facial data
+        reader.ReadUInt32(); // unused facial data
+        v200Vertex[] verts = new v200Vertex[numVerts];
+        verts = readVertices(reader, verts, numVerts, 40);
+        if (numBones > 0)
+        {
+            //skip bone data if present
+            reader.ReadBytes((int)(numVerts * 8));
+        }
+        v200Face[] faces = new v200Face[numFaces];
+        for (int i = 0; i < numFaces; i++)
+        {
+            faces[i].a = reader.ReadUInt32() + 1;
+            faces[i].b = reader.ReadUInt32() + 1;
+            faces[i].c = reader.ReadUInt32() + 1;
+        }
+        uint[] lods = new uint[numLODs];
+        for (int i = 0; i < numLODs; i++)
+        {
+            lods[i] = reader.ReadUInt32();
+        }
+        //beyond this point is data in the mesh that is ignored
+        if (!Directory.Exists(curpath + "assets/" + folderName))
+        {
+            system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
+        }
+        var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + "-v" + version[8..] + ".obj", FileMode.OpenOrCreate);
+        fileOut.Write(Encoding.UTF8.GetBytes("# Converted from Roblox Mesh " + version + " to obj by BloxDump"));
+        string vertData = "";
+        string texData = "";
+        string normData = "";
+        string faceData = "";
+        foreach (v200Vertex vert in verts)
+        {
+            vertData = vertData.Insert(vertData.Length, "\nv " + vert.px + " " + vert.py + " " + vert.pz).Replace(",", ".");
+            normData = normData.Insert(normData.Length, "\nvn " + vert.nx + " " + vert.ny + " " + vert.nz).Replace(",", ".");
+            texData = texData.Insert(texData.Length, "\nvt " + vert.tu + " " + vert.tv + " 0").Replace(",", ".");
+        }
+        for (int i = 0; i < (lodType == 0 ? numFaces : lods[1]); i++)
+        {
+            var face = faces[i];
+            faceData = faceData.Insert(faceData.Length, "\nf " + face.a + "/" + face.a + "/" + face.a + " " + face.b + "/" + face.b + "/" + face.b + " " + face.c + "/" + face.c + "/" + face.c);
+        }
+        fileOut.Write(Encoding.UTF8.GetBytes(vertData));
+        fileOut.Write(Encoding.UTF8.GetBytes(normData));
+        fileOut.Write(Encoding.UTF8.GetBytes(texData));
+        fileOut.Write(Encoding.UTF8.GetBytes(faceData));
+        fileOut.Close();
     }
 
     private static void version4(byte[] data, string folderName, string outhash) // hey vsauce emk here, this also uses v200 vertex and face
@@ -363,6 +435,10 @@ public static class BloxMesh
         else if (numOnlyVer == "4.00" || numOnlyVer == "4.01")
         {
             version4(data, folderName, outhash);
+        }
+        else if (numOnlyVer == "5.00")
+        {
+            version5(data, folderName, outhash);
         }
     }
 }
