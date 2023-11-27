@@ -147,9 +147,9 @@ async Task thread(string name)
         output = "ogg";
         folder = "Sounds";
     }
-    else if (begin.Contains("matroska"))
+    else if (begin.Contains("TSSE")||begin.Contains("Lavf")||begin.Contains("matroska"))
     {
-        print("Data identified as Matroska? Assuming MP3 output");
+        print("Data identified as MP3");
         output = "mp3";
         folder = "Sounds";
     }
