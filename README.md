@@ -28,7 +28,7 @@ List of everything BloxDump can currently dump:<br>
 ✅ `version 4.00` <b>By: [EmK530](https://github.com/EmK530)</b><br>
 ✅ `version 4.01` <b>By: [EmK530](https://github.com/EmK530)</b><br>
 ✅ `version 5.00` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-❌ `version 6.00` <b>Currently unused by Roblox</b><br><br>
+❌ `version 6.00` <b>Currently unused by Roblox</b><br>
 
 ## Contributions
 If there is any file format that you want to add support for, feel free to make a pull request!<br>
