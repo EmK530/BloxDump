@@ -74,7 +74,7 @@ public static class BloxMesh
             verts[i].ny = reader.ReadSingle();
             verts[i].nz = reader.ReadSingle();
             verts[i].tu = reader.ReadSingle();
-            verts[i].tv = reader.ReadSingle();
+            verts[i].tv = 1.0f-reader.ReadSingle();
             verts[i].tw = 0x0;
             verts[i].tx = reader.ReadSByte();
             verts[i].ty = reader.ReadSByte();
