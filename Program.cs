@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
+using System.Net;
 
 #pragma warning disable CS0219
 #pragma warning disable CS8321
@@ -10,6 +11,8 @@ using System.Text.Json.Nodes;
 #pragma warning disable CS8604
 
 bool db = false;
+
+string client_name = "BloxDump v4.2";
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
@@ -28,6 +31,9 @@ void check_thread_life()
         if (!a.IsCompleted)
         {
             still_alive.Add(a);
+        } else if (a.IsFaulted)
+        {
+            error("Downloading thread errored: "+a.Exception.ToString());
         }
     }
     threads = still_alive;
@@ -88,17 +94,35 @@ async Task thread(string name)
         return;
     }
     byte[] cont = null;
+    print("Downloading asset from " + link);
     while (true)
     {
-        HttpResponseMessage resp = await client.GetAsync(link);
-        if (resp.IsSuccessStatusCode)
+        bool success = false;
+        string ex = "";
+        HttpResponseMessage resp = new HttpResponseMessage();
+        try
+        {
+            resp = await client.GetAsync(link);
+            success = true;
+        } catch (Exception exc)
+        {
+            ex = exc.Message;
+        }
+        if (success && resp.IsSuccessStatusCode)
         {
             cont = await resp.Content.ReadAsByteArrayAsync();
             break;
         }
         else
         {
-            warn("Download failed, retrying...");
+            if (!success)
+            {
+                error("Download failed with exception '"+ex+"', retrying...");
+            }
+            else
+            {
+                warn("Download failed, retrying...");
+            }
         }
     }
     string begin = Encoding.UTF8.GetString(cont[..48]);
@@ -261,7 +285,7 @@ async Task thread(string name)
 Console.Clear();
 system("cls");
 //those clears ensure that the print labels work
-Console.Title = "BloxDump | Prompt";
+Console.Title = client_name+" | Prompt";
 Console.WriteLine("How many threads do you want to use?");
 Console.WriteLine("Your CPU has " + Environment.ProcessorCount + " threads. Please input a number less or equal to it.");
 Console.WriteLine("More threads = faster, more CPU usage.");
@@ -280,6 +304,7 @@ while (true)
             {
                 Console.WriteLine();
                 max_threads = desiredThreads;
+                ServicePointManager.DefaultConnectionLimit = desiredThreads;
                 break;
             }
         }
@@ -287,6 +312,7 @@ while (true)
         {
             Console.WriteLine();
             max_threads = desiredThreads;
+            ServicePointManager.DefaultConnectionLimit = desiredThreads;
             break;
         }
     }
@@ -313,7 +339,7 @@ if (Console.ReadLine().ToLower() == "y")
 Console.Clear();
 print("BloxDump started.");
 
-Console.Title = "BloxDump | Idle";
+Console.Title = client_name+" | Idle";
 
 while (true)
 {
@@ -324,7 +350,7 @@ while (true)
     {
         string name = i.Split("\\http\\")[1];
         counts++;
-        Console.Title = "BloxDump | Processing file " + counts + "/" + total + " (" + name + ")";
+        Console.Title = client_name+" | Processing file " + counts + "/" + total + " (" + name + ")";
         if (!name.StartsWith("RBX"))
         {
             if (!known.Contains(name))
@@ -344,7 +370,7 @@ while (true)
             warn("Ignoring temporary file: " + name);
         }
     }
-    Console.Title = "BloxDump | Idle";
+    Console.Title = client_name+" | Idle";
     print("Ripping loop completed.");
     Thread.Sleep(10000);
 }
