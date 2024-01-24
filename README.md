@@ -9,10 +9,6 @@
   This essentially lets you dump assets from any Roblox game and Roblox in general.
 </p>
 
-## ⚠️ Help Wanted! ⚠️
-It has been discovered that BloxDump seems to be having issues converting UV coordinates properly for Roblox meshes.<br>
-If you can find out what exactly goes wrong please create a new issue explaining it!<br>
-
 ## Support
 List of everything BloxDump can currently dump:<br>
 <b>2D Textures (PNG / JFIF)</b><br>
