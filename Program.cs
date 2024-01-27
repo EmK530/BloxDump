@@ -58,7 +58,8 @@ string[] bans =
 {
     "noFilter",
     "Png",
-    "isCircular"
+    "isCircular",
+    "3319998a6720cf9d1a879e6e7ed25f52"
 };
 
 using HttpClient client = new HttpClient(new HttpClientHandler
