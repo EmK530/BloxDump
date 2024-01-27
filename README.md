@@ -9,6 +9,10 @@
   This essentially lets you dump assets from any Roblox game and Roblox in general.
 </p>
 
+## Known issues
+If downloading happens to be slow for you and you have Hamachi<br>
+downloaded and active, please try disabling it and see if it helps.
+
 ## Support
 List of everything BloxDump can currently dump:<br>
 <b>2D Textures (PNG / JFIF)</b><br>
