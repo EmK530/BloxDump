@@ -57,11 +57,6 @@ public static class BloxMesh
         public uint b; // 2nd Vertex Index
         public uint c; // 3rd Vertex Index
     }
-    struct Envelope
-    {
-        byte[] bones; // size 4, I couldn't initialize
-        byte[] weights; // size 4, I couldn't initialize
-    }
 
     private static v200Vertex[] readVertices(BinaryReader reader, v200Vertex[] verts, uint count, byte szvertex)
     {

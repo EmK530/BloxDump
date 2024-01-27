@@ -1,8 +1,8 @@
 using System.Diagnostics;
+using System.Threading;
 using System.Text;
-using System.Net.Http.Headers;
 using System.Text.Json.Nodes;
-using System.Net;
+using RestSharp;
 
 #pragma warning disable CS0219
 #pragma warning disable CS8321
@@ -12,7 +12,7 @@ using System.Net;
 
 bool db = false;
 
-string client_name = "BloxDump v4.2";
+string client_name = "BloxDump v4.3";
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
@@ -21,22 +21,23 @@ void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0
 
 string curpath = System.IO.Path.GetDirectoryName(System.AppContext.BaseDirectory) + "\\";
 int max_threads = Environment.ProcessorCount;
-List<Task> threads = new List<Task>();
+List<Thread> threads = new List<Thread>();
+object lockObject = new object();
 
 void check_thread_life()
 {
-    List<Task> still_alive = new List<Task>();
-    foreach (Task a in threads)
+    List<Thread> stillAlive = new List<Thread>();
+    lock (lockObject)
     {
-        if (!a.IsCompleted)
+        foreach (Thread thread in threads)
         {
-            still_alive.Add(a);
-        } else if (a.IsFaulted)
-        {
-            error("Downloading thread errored: "+a.Exception.ToString());
+            if (thread.IsAlive)
+            {
+                stillAlive.Add(thread);
+            }
         }
+        threads = stillAlive;
     }
-    threads = still_alive;
 }
 
 void system(string cmd)
@@ -58,10 +59,18 @@ string[] bans =
 {
     "noFilter",
     "Png",
-    "isCircular",
-    "3319998a6720cf9d1a879e6e7ed25f52"
+    "isCircular"
 };
 
+var client = new RestClient();
+client.AddDefaultHeaders(new Dictionary<string, string>()
+{
+    ["User-Agent"] = "BloxDump",
+    ["Accept"] = "binary/octet-stream",
+    ["Accept-Encoding"] = "gzip, deflate"
+});
+
+/*
 using HttpClient client = new HttpClient(new HttpClientHandler
 {
     AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
@@ -70,8 +79,9 @@ client.DefaultRequestHeaders.Accept.Clear();
 client.DefaultRequestHeaders.Accept.Add(
     new MediaTypeWithQualityHeaderValue("binary/octet-stream"));
 client.DefaultRequestHeaders.Add("User-Agent", "BloxDump");
+*/
 
-async Task thread(string name)
+void thread(string name)
 {
     byte[] data = File.ReadAllBytes(name);
     string dataString = Encoding.UTF8.GetString(data[0..(data.Length > 128 ? 128 : data.Length)]);
@@ -100,25 +110,28 @@ async Task thread(string name)
     {
         bool success = false;
         string ex = "";
-        HttpResponseMessage resp = new HttpResponseMessage();
+        
+        RestResponse resp = new RestResponse();
         try
         {
-            resp = await client.GetAsync(link);
+            var req = new RestRequest(link, Method.Get);
+            resp = client.Get(req);
             success = true;
-        } catch (Exception exc)
+        }
+        catch (Exception exc)
         {
             ex = exc.Message;
         }
         if (success && resp.IsSuccessStatusCode)
         {
-            cont = await resp.Content.ReadAsByteArrayAsync();
+            cont = resp.RawBytes;
             break;
         }
         else
         {
             if (!success)
             {
-                error("Download failed with exception '"+ex+"', retrying...");
+                error("Download failed with exception '" + ex + "', retrying...");
             }
             else
             {
@@ -224,7 +237,7 @@ async Task thread(string name)
     }
     else if (output == "ttf")
     {
-        var js = JsonObject.Parse(System.Text.Encoding.UTF8.GetString(cont));
+        var js = JsonObject.Parse(Encoding.UTF8.GetString(cont));
         var outname = js["name"];
         File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + ".json", cont);
         Thread.Sleep(100);
@@ -236,10 +249,11 @@ async Task thread(string name)
             byte[] fontdata = null;
             while (true)
             {
-                HttpResponseMessage resp = await client.GetAsync("https://assetdelivery.roblox.com/v1/asset?id=" + assetid);
+                var req = new RestRequest("https://assetdelivery.roblox.com/v1/asset?id=" + assetid, Method.Get);
+                RestResponse resp = client.Get(req);
                 if (resp.IsSuccessStatusCode)
                 {
-                    fontdata = await resp.Content.ReadAsByteArrayAsync();
+                    fontdata = resp.RawBytes;
                     break;
                 }
                 else
@@ -252,13 +266,13 @@ async Task thread(string name)
     }
     else if (output == "translation")
     {
-        var js = JsonObject.Parse(System.Text.Encoding.UTF8.GetString(cont));
+        var js = JsonObject.Parse(Encoding.UTF8.GetString(cont));
         var locale = js["locale"];
         File.WriteAllBytes(curpath + "assets/" + folder + "/locale-" + locale + ".json", cont);
     }
     else if (output == "mesh")
     {
-        string meshVersion = System.Text.Encoding.UTF8.GetString(cont)[..12];
+        string meshVersion = Encoding.UTF8.GetString(cont)[..12];
         string numOnlyVer = meshVersion[8..];
         string noDotVer = numOnlyVer.Replace(".", "");
         if (BloxMesh.supported_mesh_versions.Contains(meshVersion))
@@ -305,7 +319,6 @@ while (true)
             {
                 Console.WriteLine();
                 max_threads = desiredThreads;
-                ServicePointManager.DefaultConnectionLimit = desiredThreads;
                 break;
             }
         }
@@ -313,7 +326,6 @@ while (true)
         {
             Console.WriteLine();
             max_threads = desiredThreads;
-            ServicePointManager.DefaultConnectionLimit = desiredThreads;
             break;
         }
     }
@@ -360,10 +372,15 @@ while (true)
                 check_thread_life();
                 while (threads.Count >= max_threads)
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(50);
                     check_thread_life();
                 }
-                threads.Add(Task.Run(() => thread(i)));
+                Thread thr = new Thread(() => thread(i));
+                thr.Start();
+                lock (lockObject)
+                {
+                    threads.Add(thr);
+                }
             }
         }
         else
