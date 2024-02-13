@@ -9,9 +9,9 @@
   This essentially lets you dump assets from any Roblox game and Roblox in general.
 </p>
 
-## Known issues
-If downloading happens to be slow for you and you have Hamachi<br>
-downloaded and active, please try disabling it and see if it helps.
+## Plans
+* <b>Khronos Texture Parser</b> | Makes PVRTexToolCLI obsolete and should speed up KTX dumping
+* <b>More friendly startup config</b>
 
 ## Support
 List of everything BloxDump can currently dump:<br>
