@@ -9,11 +9,6 @@
   This essentially lets you dump assets from any Roblox game and Roblox in general.
 </p>
 
-## Plans
-* <b>Khronos Texture Parser</b> | Makes PVRTexToolCLI obsolete and should speed up KTX dumping
-* <b>Cached content extraction</b> | Skips downloads of links stored in cache files with content already stored in there
-* <b>More friendly startup config</b>
-
 ## Support
 List of everything BloxDump can currently dump:<br>
 <b>2D Textures (PNG / JFIF)</b><br>
