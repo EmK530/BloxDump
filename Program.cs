@@ -8,7 +8,7 @@ using RestSharp;
 #pragma warning disable CS8603
 #pragma warning disable CS8604
 
-bool db = false;
+bool db = true;
 
 string client_name = "BloxDump v4.4";
 
@@ -197,6 +197,12 @@ void thread(string name)
         debug("Ignoring blocked hash.");
         return;
     }
+    if (knownlinks.Contains(link))
+    {
+        debug("Ignoring duplicate cdn link.");
+        return;
+    }
+    knownlinks.Add(link);
     byte[] cont;
     if (reqStatusCode == 200)
     {
@@ -209,12 +215,6 @@ void thread(string name)
     }
     else
     {
-        if (knownlinks.Contains(link))
-        {
-            debug("Ignoring duplicate cdn link.");
-            return;
-        }
-        knownlinks.Add(link);
         cont = DownloadFile(link);
     }
     string begin = Encoding.UTF8.GetString(cont[..48]);
