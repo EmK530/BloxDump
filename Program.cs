@@ -1,18 +1,16 @@
 using System.Diagnostics;
-using System.Threading;
 using System.Text;
 using System.Text.Json.Nodes;
 using RestSharp;
 
-#pragma warning disable CS0219
-#pragma warning disable CS8321
 #pragma warning disable CS8600
 #pragma warning disable CS8602
+#pragma warning disable CS8603
 #pragma warning disable CS8604
 
 bool db = false;
 
-string client_name = "BloxDump v4.3";
+string client_name = "BloxDump v4.4";
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
@@ -20,7 +18,7 @@ void warn(string input) { Console.WriteLine("\x1b[6;30;43m" + "WARN" + "\x1b[0m 
 void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0m " + input); }
 
 string curpath = System.IO.Path.GetDirectoryName(System.AppContext.BaseDirectory) + "\\";
-int max_threads = Environment.ProcessorCount;
+int max_threads = 1;
 List<Thread> threads = new List<Thread>();
 object lockObject = new object();
 
@@ -71,47 +69,14 @@ client.AddDefaultHeaders(new Dictionary<string, string>()
     ["Accept-Encoding"] = "gzip, deflate"
 });
 
-/*
-using HttpClient client = new HttpClient(new HttpClientHandler
+byte[] DownloadFile(string link)
 {
-    AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate
-});
-client.DefaultRequestHeaders.Accept.Clear();
-client.DefaultRequestHeaders.Accept.Add(
-    new MediaTypeWithQualityHeaderValue("binary/octet-stream"));
-client.DefaultRequestHeaders.Add("User-Agent", "BloxDump");
-*/
-
-void thread(string name)
-{
-    byte[] data = File.ReadAllBytes(name);
-    string dataString = Encoding.UTF8.GetString(data[0..(data.Length > 128 ? 128 : data.Length)]);
-    if (dataString.Substring(0, 4) != "RBXH")
-    {
-        debug("Ignoring non-RBXH file: " + name);
-        return;
-    }
-    string link = dataString.Substring(dataString.IndexOf("https://")).Split("\x00")[0];
-    if (knownlinks.Contains(link))
-    {
-        debug("Ignoring duplicate cdn link.");
-        return;
-    }
-    knownlinks.Add(link);
-    string[] s = link.Split("/");
-    string outhash = s[s.Length - 1];
-    if (bans.Contains(outhash))
-    {
-        debug("Ignoring blocked hash.");
-        return;
-    }
     byte[] cont = null;
-    print("Downloading asset from " + link);
+    debug("Downloading asset from " + link);
     while (true)
     {
         bool success = false;
         string ex = "";
-        
         RestResponse resp = new RestResponse();
         try
         {
@@ -132,20 +97,132 @@ void thread(string name)
         {
             if (!success)
             {
-                error("Download failed with exception '" + ex + "', retrying...");
+                error("Asset download failed with exception '" + ex + "', retrying...");
             }
             else
             {
-                warn("Download failed, retrying...");
+                warn("Asset download failed, retrying...");
             }
         }
+    }
+    return cont;
+}
+
+void thread(string name)
+{
+    byte[] data = File.ReadAllBytes(name);
+    string[] split = name.Split("\\");
+    string filename = split[split.Length-1];
+    IEnumerator<byte> e = ((IEnumerable<byte>)data).GetEnumerator();
+    int enumPos = 0;
+    byte ReadByte()
+    {
+        enumPos++;
+        e.MoveNext();
+        return e.Current;
+    }
+    void Skip(int amt)
+    {
+        enumPos += amt;
+        for (int i = 0; i < amt; i++)
+        {
+            e.MoveNext();
+        }
+    }
+    bool lEndian = true;
+    byte[] ReadBytes(uint amt)
+    {
+        byte[] ret = new byte[amt];
+        for (int i = 0; i < amt; i++)
+        {
+            ret[i] = ReadByte();
+        }
+        return ret;
+    }
+    uint ReadUInt32()
+    {
+        uint sum = 0;
+        for (int i = 0; i < 4; i++)
+        {
+            sum += (uint)(ReadByte() << (lEndian ? (8 * i) : (24 - 8 * i)));
+        }
+        return sum;
+    }
+    string ReadString(int len)
+    {
+        if (len != -1)
+        {
+            byte[] total = new byte[len];
+            for (int i = 0; i < len; i++)
+            {
+                total[i] = ReadByte();
+            }
+            return Encoding.UTF8.GetString(total);
+        }
+        else
+        {
+            byte begin = ReadByte();
+            List<byte> total = new List<byte>() { begin };
+            if (begin == 0x00) return "";
+            while (true)
+            {
+                byte check = ReadByte();
+                if (check == 0x00)
+                {
+                    break;
+                }
+                else
+                {
+                    total.Add(check);
+                }
+            }
+            return Encoding.UTF8.GetString(total.ToArray());
+        }
+    }
+    string ident = ReadString(4);
+    if(ident != "RBXH")
+    {
+        debug("Ignoring non-RBXH identifier: " + ident);
+        return;
+    }
+    Skip(4);
+    uint linklen = ReadUInt32();
+    string link = ReadString((int)linklen);
+    Skip(1);
+    uint reqStatusCode = ReadUInt32();
+    string[] s = link.Split("/");
+    string outhash = s[s.Length - 1];
+    if (bans.Contains(outhash))
+    {
+        debug("Ignoring blocked hash.");
+        return;
+    }
+    byte[] cont;
+    if (reqStatusCode == 200)
+    {
+        debug("Extracting cached data from: " + name);
+        uint headerDataLen = ReadUInt32();
+        Skip(4);
+        uint fileSize = ReadUInt32();
+        Skip(8 + (int)headerDataLen);
+        cont = ReadBytes(fileSize);
+    }
+    else
+    {
+        if (knownlinks.Contains(link))
+        {
+            debug("Ignoring duplicate cdn link.");
+            return;
+        }
+        knownlinks.Add(link);
+        cont = DownloadFile(link);
     }
     string begin = Encoding.UTF8.GetString(cont[..48]);
     string output = null;
     string folder = null;
     if (begin.Contains("<roblox!"))
     {
-        print("Data identified as RBXM Animation");
+        print("Dumping asset type: RBXM Animation");
         output = "rbxm";
         folder = "Animations";
     }
@@ -156,49 +233,49 @@ void thread(string name)
     }
     else if (!begin.Contains("\"version") && begin.Contains("version"))
     {
-        print("Data identified as a Roblox Mesh");
+        print("Dumping asset type: Roblox Mesh");
         output = "mesh";
         folder = "Meshes";
     }
     else if (begin.Contains("{\"locale\":\""))
     {
-        print("Data identified as JSON translation");
+        print("Dumping asset type: JSON translation");
         output = "translation";
         folder = "Translations";
     }
     else if (begin.Contains("PNG\r\n"))
     {
-        print("Data identified as PNG");
+        print("Dumping asset type: PNG");
         output = "png";
         folder = "Textures";
     }
     else if (begin.Contains("JFIF"))
     {
-        print("Data identified as JFIF");
+        print("Dumping asset type: JFIF");
         output = "jfif";
         folder = "Textures";
     }
     else if (begin.Contains("OggS"))
     {
-        print("Data identified as OGG");
+        print("Dumping asset type: OGG");
         output = "ogg";
         folder = "Sounds";
     }
     else if (begin.Contains("TSSE") || begin.Contains("Lavf") || begin.Contains("matroska"))
     {
-        print("Data identified as MP3");
+        print("Dumping asset type: MP3");
         output = "mp3";
         folder = "Sounds";
     }
     else if (begin.Contains("KTX "))
     {
-        print("Data identified as Khronos Texture");
+        print("Dumping asset type: Khronos Texture");
         output = "ktx";
         folder = "KTX Textures";
     }
     else if (begin.Contains("\"name\": \""))
     {
-        print("Data identified as JSON font list");
+        print("Dumping asset type: JSON font list");
         output = "ttf";
         folder = "Fonts";
     }
@@ -238,12 +315,13 @@ void thread(string name)
     }
     else if (output == "ttf")
     {
-        var js = JsonObject.Parse(Encoding.UTF8.GetString(cont));
+        JsonNode js = JsonObject.Parse(Encoding.UTF8.GetString(cont));
         var outname = js["name"];
         File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + ".json", cont);
         Thread.Sleep(100);
-        print("Found " + js["faces"].ToString().Length + " fonts");
-        for (int j = 0; j < js["faces"].ToString().Length; j++)
+        int fontcount = ((JsonArray)js["faces"]).Count;
+        print("Found " + fontcount + " fonts");
+        for (int j = 0; j < fontcount; j++)
         {
             print("Downloading " + outname + "-" + js["faces"][j]["name"] + ".ttf...");
             var assetid = js["faces"][j]["assetId"].ToString().Split("rbxassetid://")[1];
@@ -259,7 +337,7 @@ void thread(string name)
                 }
                 else
                 {
-                    warn("Download failed, retrying...");
+                    warn("Font download failed, retrying...");
                 }
             }
             File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + "-" + js["faces"][j]["name"] + ".ttf", fontdata);
@@ -278,12 +356,12 @@ void thread(string name)
         string noDotVer = numOnlyVer.Replace(".", "");
         if (BloxMesh.supported_mesh_versions.Contains(meshVersion))
         {
-            print("Converting mesh version " + numOnlyVer);
+            debug("Converting mesh version " + numOnlyVer);
             BloxMesh.Convert(cont, folder, outhash);
         }
         else
         {
-            print("Mesh version " + numOnlyVer + " unsupported! Dumping raw file.");
+            warn("Mesh version " + numOnlyVer + " unsupported! Dumping raw file.");
             folder = "Unsupported " + folder;
             if (!Directory.Exists(curpath + "assets/" + folder))
             {
@@ -298,25 +376,42 @@ void thread(string name)
     }
 }
 
+bool threading = false;
+
 Console.Clear();
 system("cls");
 //those clears ensure that the print labels work
 Console.Title = client_name+" | Prompt";
-Console.WriteLine("How many threads do you want to use?");
-Console.WriteLine("Your CPU has " + Environment.ProcessorCount + " threads. Please input a number less or equal to it.");
-Console.WriteLine("More threads = faster, more CPU usage.");
-while (true)
+Console.WriteLine("Do you want to use multithreading?");
+Console.WriteLine("Enabling it will make dumping faster but will use more CPU.");
+Console.Write("\nType Y to enable multithreading: ");
+if (Console.ReadLine().ToLower() == "y")
 {
-    Console.Write("\nInput: ");
-    string input = Console.ReadLine();
-    int desiredThreads;
-    if (int.TryParse(input, out desiredThreads))
+    Console.Clear();
+    print("Multithreading enabled.\n");
+    threading = true;
+    Console.WriteLine("How many threads do you want to use?");
+    Console.WriteLine("Your CPU has " + Environment.ProcessorCount + " threads. Please input a number less or equal to it.");
+    Console.WriteLine("More threads = faster dumping & more CPU usage.");
+    while (true)
     {
-        if (desiredThreads > max_threads)
+        Console.Write("\nInput: ");
+        string input = Console.ReadLine();
+        int desiredThreads;
+        if (int.TryParse(input, out desiredThreads))
         {
-            Console.WriteLine("\nAre you sure you want to use this amount of threads?");
-            Console.Write("Type Y to confirm: ");
-            if (Console.ReadLine().ToLower() == "y")
+            if (desiredThreads > Environment.ProcessorCount)
+            {
+                Console.WriteLine("\nAre you sure you want to use this amount of threads?");
+                Console.Write("\nType Y to confirm: ");
+                if (Console.ReadLine().ToLower() == "y")
+                {
+                    Console.WriteLine();
+                    max_threads = desiredThreads;
+                    break;
+                }
+            }
+            else
             {
                 Console.WriteLine();
                 max_threads = desiredThreads;
@@ -325,25 +420,16 @@ while (true)
         }
         else
         {
-            Console.WriteLine();
-            max_threads = desiredThreads;
-            break;
+            Console.WriteLine("Invalid input!");
         }
-    }
-    else
-    {
-        Console.WriteLine("Invalid input!");
     }
 }
 
 Console.Clear();
 
-print("Thread limit: " + max_threads + " threads.\n");
-
 Console.WriteLine("Do you want to clear Roblox's cache?");
-Console.WriteLine("Clearing cache will prevent ripping of anything from previous game sessions.");
-Console.WriteLine("Do this if you want to let BloxDump work in real-time while you're playing.");
-Console.Write("Type Y to clear or anything else to proceed: ");
+Console.WriteLine("If you clear the cache then any assets downloaded from previous sessions will not be dumped.");
+Console.Write("\nType Y to clear or anything else to proceed: ");
 if (Console.ReadLine().ToLower() == "y")
 {
     Console.WriteLine();
@@ -370,17 +456,23 @@ while (true)
             if (!known.Contains(name))
             {
                 known.Add(name);
-                check_thread_life();
-                while (threads.Count >= max_threads)
+                if (threading)
                 {
-                    Thread.Sleep(50);
                     check_thread_life();
-                }
-                Thread thr = new Thread(() => thread(i));
-                thr.Start();
-                lock (lockObject)
+                    while (threads.Count >= max_threads)
+                    {
+                        Thread.Sleep(50);
+                        check_thread_life();
+                    }
+                    Thread thr = new Thread(() => thread(i));
+                    thr.Start();
+                    lock (lockObject)
+                    {
+                        threads.Add(thr);
+                    }
+                } else
                 {
-                    threads.Add(thr);
+                    thread(i);
                 }
             }
         }
