@@ -8,9 +8,9 @@ using RestSharp;
 #pragma warning disable CS8603
 #pragma warning disable CS8604
 
-bool db = true;
+bool db = false;
 
-string client_name = "BloxDump v4.4";
+string client_name = "BloxDump v4.4.1";
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
