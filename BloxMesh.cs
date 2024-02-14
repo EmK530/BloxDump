@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Text.Json.Nodes;
 
@@ -93,6 +92,11 @@ public static class BloxMesh
         return verts;
     }
 
+    private static void appendFix(StringBuilder b, string insert)
+    {
+        b.AppendLine(insert.Replace(",", "."));
+    }
+
     private static void version5(byte[] data, string folderName, string outhash) // ZOMG V4 BUT WITH TWO IGNORED INTS IN MESHHEADER????? :flushed:
     {
         string? version = Encoding.UTF8.GetString(data[..12]);
@@ -136,32 +140,35 @@ public static class BloxMesh
             lods[i] = reader.ReadUInt32();
         }
         //beyond this point is data in the mesh that is ignored
-        if (!Directory.Exists(curpath + "assets/" + folderName))
+        string directoryPath = Path.Combine(curpath, "assets", folderName);
+        if (!Directory.Exists(directoryPath))
         {
-            system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
+            Directory.CreateDirectory(directoryPath);
         }
-        var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + "-v" + version[8..] + ".obj", FileMode.OpenOrCreate);
-        fileOut.Write(Encoding.UTF8.GetBytes("# Converted from Roblox Mesh " + version + " to obj by BloxDump"));
-        string vertData = "";
-        string texData = "";
-        string normData = "";
-        string faceData = "";
-        foreach (v200Vertex vert in verts)
+        string filePath = Path.Combine(directoryPath, $"{outhash}-v{version[8..]}.obj");
+        using (StreamWriter writer = new StreamWriter(filePath))
         {
-            vertData = vertData.Insert(vertData.Length, "\nv " + vert.px + " " + vert.py + " " + vert.pz).Replace(",", ".");
-            normData = normData.Insert(normData.Length, "\nvn " + vert.nx + " " + vert.ny + " " + vert.nz).Replace(",", ".");
-            texData = texData.Insert(texData.Length, "\nvt " + vert.tu + " " + vert.tv + " 0").Replace(",", ".");
+            writer.Write("# Converted from Roblox Mesh " + version + " to obj by BloxDump\n");
+            StringBuilder vertData = new StringBuilder();
+            StringBuilder texData = new StringBuilder();
+            StringBuilder normData = new StringBuilder();
+            StringBuilder faceData = new StringBuilder();
+            foreach (v200Vertex vert in verts)
+            {
+                appendFix(vertData,$"v {vert.px} {vert.py} {vert.pz}");
+                appendFix(normData,$"vn {vert.nx} {vert.ny} {vert.nz}");
+                appendFix(texData,$"vt {vert.tu} {vert.tv} 0");
+            }
+            for (int i = 0; i < (lodType == 0 ? numFaces : lods[1]); i++)
+            {
+                var face = faces[i];
+                appendFix(faceData,$"f {face.a}/{face.a}/{face.a} {face.b}/{face.b}/{face.b} {face.c}/{face.c}/{face.c}");
+            }
+            writer.Write(vertData);
+            writer.Write(normData);
+            writer.Write(texData);
+            writer.Write(faceData);
         }
-        for (int i = 0; i < (lodType == 0 ? numFaces : lods[1]); i++)
-        {
-            var face = faces[i];
-            faceData = faceData.Insert(faceData.Length, "\nf " + face.a + "/" + face.a + "/" + face.a + " " + face.b + "/" + face.b + "/" + face.b + " " + face.c + "/" + face.c + "/" + face.c);
-        }
-        fileOut.Write(Encoding.UTF8.GetBytes(vertData));
-        fileOut.Write(Encoding.UTF8.GetBytes(normData));
-        fileOut.Write(Encoding.UTF8.GetBytes(texData));
-        fileOut.Write(Encoding.UTF8.GetBytes(faceData));
-        fileOut.Close();
     }
 
     private static void version4(byte[] data, string folderName, string outhash) // hey vsauce emk here, this also uses v200 vertex and face
@@ -205,32 +212,35 @@ public static class BloxMesh
             lods[i] = reader.ReadUInt32();
         }
         //beyond this point is data in the mesh that is ignored
-        if (!Directory.Exists(curpath + "assets/" + folderName))
+        string directoryPath = Path.Combine(curpath, "assets", folderName);
+        if (!Directory.Exists(directoryPath))
         {
-            system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
+            Directory.CreateDirectory(directoryPath);
         }
-        var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + "-v" + version[8..] + ".obj", FileMode.OpenOrCreate);
-        fileOut.Write(Encoding.UTF8.GetBytes("# Converted from Roblox Mesh " + version + " to obj by BloxDump"));
-        string vertData = "";
-        string texData = "";
-        string normData = "";
-        string faceData = "";
-        foreach (v200Vertex vert in verts)
+        string filePath = Path.Combine(directoryPath, $"{outhash}-v{version[8..]}.obj");
+        using (StreamWriter writer = new StreamWriter(filePath))
         {
-            vertData = vertData.Insert(vertData.Length, "\nv " + vert.px + " " + vert.py + " " + vert.pz).Replace(",", ".");
-            normData = normData.Insert(normData.Length, "\nvn " + vert.nx + " " + vert.ny + " " + vert.nz).Replace(",", ".");
-            texData = texData.Insert(texData.Length, "\nvt " + vert.tu + " " + vert.tv + " 0").Replace(",", ".");
+            writer.Write("# Converted from Roblox Mesh " + version + " to obj by BloxDump\n");
+            StringBuilder vertData = new StringBuilder();
+            StringBuilder texData = new StringBuilder();
+            StringBuilder normData = new StringBuilder();
+            StringBuilder faceData = new StringBuilder();
+            foreach (v200Vertex vert in verts)
+            {
+                appendFix(vertData,$"v {vert.px} {vert.py} {vert.pz}");
+                appendFix(normData,$"vn {vert.nx} {vert.ny} {vert.nz}");
+                appendFix(texData,$"vt {vert.tu} {vert.tv} 0");
+            }
+            for (int i = 0; i < (lodType == 0 ? numFaces : lods[1]); i++)
+            {
+                var face = faces[i];
+                appendFix(faceData,$"f {face.a}/{face.a}/{face.a} {face.b}/{face.b}/{face.b} {face.c}/{face.c}/{face.c}");
+            }
+            writer.Write(vertData);
+            writer.Write(normData);
+            writer.Write(texData);
+            writer.Write(faceData);
         }
-        for (int i = 0; i < (lodType==0 ? numFaces : lods[1]); i++)
-        {
-            var face = faces[i];
-            faceData = faceData.Insert(faceData.Length, "\nf " + face.a + "/" + face.a + "/" + face.a + " " + face.b + "/" + face.b + "/" + face.b + " " + face.c + "/" + face.c + "/" + face.c);
-        }
-        fileOut.Write(Encoding.UTF8.GetBytes(vertData));
-        fileOut.Write(Encoding.UTF8.GetBytes(normData));
-        fileOut.Write(Encoding.UTF8.GetBytes(texData));
-        fileOut.Write(Encoding.UTF8.GetBytes(faceData));
-        fileOut.Close();
     }
 
     private static void version3(byte[] data, string folderName, string outhash) // this uses v200 vertex and face structs because the only difference is LOD support!
@@ -249,53 +259,48 @@ public static class BloxMesh
         debug("[BloxMesh_v3] Mesh is version " + version + " and has " + cfaces + " faces.");
         debug("[BloxMesh_v3] Version 3 mesh convertion will ONLY convert the highest level of detail.");
         debug(szmeshHeader + " MHSize, " + szvertex + " VSize, " + szface + " FSize, " + szLOD + " LODSize, " + cverts + " VCount, " + cfaces + " FCount, " + cLODs + " LODCount");
-        if (!Directory.Exists(curpath + "assets/" + folderName))
+        v200Vertex[] verts = new v200Vertex[cverts];
+        v200Face[] faces = new v200Face[cfaces];
+        verts = readVertices(reader,verts,cverts,szvertex);
+        for (int i = 0; i < cfaces; i++)
         {
-            system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
+            faces[i].a = reader.ReadUInt32() + 1;
+            faces[i].b = reader.ReadUInt32() + 1;
+            faces[i].c = reader.ReadUInt32() + 1;
         }
-        var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + "-v" + version[8..] + ".obj", FileMode.OpenOrCreate);
-        fileOut.Write(Encoding.UTF8.GetBytes("# Converted from Roblox Mesh " + version + " to obj by BloxDump"));
-        try
+        uint[] meshLODs = new uint[cLODs];
+        for (int i = 0; i < cLODs; i++)
         {
-            v200Vertex[] verticies = new v200Vertex[cverts];
-            v200Face[] faces = new v200Face[cfaces];
-            verticies = readVertices(reader,verticies,cverts,szvertex);
-            for (int i = 0; i < cfaces; i++)
+            meshLODs[i] = reader.ReadUInt32();
+        }
+        string directoryPath = Path.Combine(curpath, "assets", folderName);
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+        string filePath = Path.Combine(directoryPath, $"{outhash}-v{version[8..]}.obj");
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            writer.Write("# Converted from Roblox Mesh " + version + " to obj by BloxDump\n");
+            StringBuilder vertData = new StringBuilder();
+            StringBuilder texData = new StringBuilder();
+            StringBuilder normData = new StringBuilder();
+            StringBuilder faceData = new StringBuilder();
+            foreach (v200Vertex vert in verts)
             {
-                faces[i].a = reader.ReadUInt32() + 1;
-                faces[i].b = reader.ReadUInt32() + 1;
-                faces[i].c = reader.ReadUInt32() + 1;
-            }
-            uint[] meshLODs = new uint[cLODs];
-            for (int i = 0; i < cLODs; i++)
-            {
-                meshLODs[i] = reader.ReadUInt32();
-            }
-
-            string vertData = "";
-            string texData = "";
-            string normData = "";
-            string faceData = "";
-            foreach (v200Vertex vert in verticies)
-            {
-                vertData = vertData.Insert(vertData.Length, "\nv " + vert.px + " " + vert.py + " " + vert.pz).Replace(",", ".");
-                normData = normData.Insert(normData.Length, "\nvn " + vert.nx + " " + vert.ny + " " + vert.nz).Replace(",", ".");
-                texData = texData.Insert(texData.Length, "\nvt " + vert.tu + " " + vert.tv + " 0").Replace(",", ".");
+                appendFix(vertData,$"v {vert.px} {vert.py} {vert.pz}");
+                appendFix(normData,$"vn {vert.nx} {vert.ny} {vert.nz}");
+                appendFix(texData,$"vt {vert.tu} {vert.tv} 0");
             }
             for (int i = 0; i < meshLODs[1]; i++)
             {
                 var face = faces[i];
-                faceData = faceData.Insert(faceData.Length, "\nf " + face.a + "/" + face.a + "/" + face.a + " " + face.b + "/" + face.b + "/" + face.b + " " + face.c + "/" + face.c + "/" + face.c);
+                appendFix(faceData,$"f {face.a}/{face.a}/{face.a} {face.b}/{face.b}/{face.b} {face.c}/{face.c}/{face.c}");
             }
-            fileOut.Write(Encoding.UTF8.GetBytes(vertData));
-            fileOut.Write(Encoding.UTF8.GetBytes(normData));
-            fileOut.Write(Encoding.UTF8.GetBytes(texData));
-            fileOut.Write(Encoding.UTF8.GetBytes(faceData));
-            fileOut.Close();
-        }
-        catch (Exception e)
-        {
-            error("Error! " + e.Message);
+            writer.Write(vertData);
+            writer.Write(normData);
+            writer.Write(texData);
+            writer.Write(faceData);
         }
     }
 
@@ -312,47 +317,42 @@ public static class BloxMesh
         uint cfaces = reader.ReadUInt32();
         debug("[BloxMesh_v2] Mesh is version " + version + " and has " + cfaces + " faces.");
         debug(szmeshHeader + " MHSize, " + szvertex + " VSize, " + szface + " FSize, " + cverts + " VCount, " + cfaces + " FCount");
-        if (!Directory.Exists(curpath + "assets/" + folderName))
+        v200Vertex[] verts = new v200Vertex[cverts];
+        v200Face[] faces = new v200Face[cfaces];
+        verts = readVertices(reader, verts, cverts, szvertex);
+        for (int i = 0; i < cfaces; i++)
         {
-            system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
+            faces[i].a = reader.ReadUInt32()+1;
+            faces[i].b = reader.ReadUInt32()+1;
+            faces[i].c = reader.ReadUInt32()+1;
         }
-        var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + "-v" + version[8..] + ".obj", FileMode.OpenOrCreate);
-        fileOut.Write(Encoding.UTF8.GetBytes("# Converted from Roblox Mesh " + version + " to obj by BloxDump"));
-        try
+        string directoryPath = Path.Combine(curpath, "assets", folderName);
+        if (!Directory.Exists(directoryPath))
         {
-            v200Vertex[] verticies = new v200Vertex[cverts];
-            v200Face[] faces = new v200Face[cfaces];
-            verticies = readVertices(reader, verticies, cverts, szvertex);
-            for (int i = 0; i < cfaces; i++)
+            Directory.CreateDirectory(directoryPath);
+        }
+        string filePath = Path.Combine(directoryPath, $"{outhash}-v{version[8..]}.obj");
+        using (StreamWriter writer = new StreamWriter(filePath))
+        {
+            writer.Write("# Converted from Roblox Mesh " + version + " to obj by BloxDump\n");
+            StringBuilder vertData = new StringBuilder();
+            StringBuilder texData = new StringBuilder();
+            StringBuilder normData = new StringBuilder();
+            StringBuilder faceData = new StringBuilder();
+            foreach (v200Vertex vert in verts)
             {
-                faces[i].a = reader.ReadUInt32()+1;
-                faces[i].b = reader.ReadUInt32()+1;
-                faces[i].c = reader.ReadUInt32()+1;
-            }
-
-            string vertData = "";
-            string texData = "";
-            string normData = "";
-            string faceData = "";
-            foreach (v200Vertex vert in verticies)
-            {
-                vertData = vertData.Insert(vertData.Length, "\nv " + vert.px + " " + vert.py + " " + vert.pz).Replace(",", ".");
-                normData = normData.Insert(normData.Length, "\nvn " + vert.nx + " " + vert.ny + " " + vert.nz).Replace(",", ".");
-                texData = texData.Insert(texData.Length, "\nvt " + vert.tu + " " + vert.tv + " 0").Replace(",", ".");
+                appendFix(vertData,$"v {vert.px} {vert.py} {vert.pz}");
+                appendFix(normData,$"vn {vert.nx} {vert.ny} {vert.nz}");
+                appendFix(texData,$"vt {vert.tu} {vert.tv} 0");
             }
             foreach (v200Face face in faces)
             {
-                faceData = faceData.Insert(faceData.Length, "\nf " + face.a + "/" + face.a + "/" + face.a + " " + face.b + "/" + face.b + "/" + face.b + " " + face.c + "/" + face.c + "/" + face.c);
+                appendFix(faceData,$"f {face.a}/{face.a}/{face.a} {face.b}/{face.b}/{face.b} {face.c}/{face.c}/{face.c}");
             }
-            fileOut.Write(Encoding.UTF8.GetBytes(vertData));
-            fileOut.Write(Encoding.UTF8.GetBytes(normData));
-            fileOut.Write(Encoding.UTF8.GetBytes(texData));
-            fileOut.Write(Encoding.UTF8.GetBytes(faceData));
-            fileOut.Close();
-        }
-        catch (Exception e)
-        {
-            error("Error! " + e.Message);
+            writer.Write(vertData);
+            writer.Write(normData);
+            writer.Write(texData);
+            writer.Write(faceData);
         }
     }
 
@@ -365,44 +365,38 @@ public static class BloxMesh
             var content = JsonObject.Parse("[" + reader.ReadLine().Replace("][", "],[") + "]");
             int true_faces = content.AsArray().Count / 3;
             debug("[BloxMesh_v1] Mesh is version " + version + " and has " + num_faces + " faces.");
-            if (!Directory.Exists(curpath + "assets/" + folderName))
+            string directoryPath = Path.Combine(curpath, "assets", folderName);
+            if (!Directory.Exists(directoryPath))
             {
-                system("cd \"" + curpath + "\" && mkdir \"assets/" + folderName + "\" >nul 2>&1");
+                Directory.CreateDirectory(directoryPath);
             }
-            var fileOut = File.Open(curpath + "assets/" + folderName + "/" + outhash + "-v" + version[8..] + ".obj", FileMode.OpenOrCreate);
-            fileOut.Write(Encoding.UTF8.GetBytes("# Converted from Roblox Mesh " + version + " to obj by BloxDump"));
-            string vertData = "";
-            string texData = "";
-            string normData = "";
-            string faceData = "";
-            int loops = 0;
-            for (int i = 0; i < true_faces; i++)
+            string filePath = Path.Combine(directoryPath, $"{outhash}-v{version[8..]}.obj");
+            using (StreamWriter writer = new StreamWriter(filePath))
             {
-                loops++;
-                var vert = content[i * 3];
-                var norm = content[i * 3 + 1];
-                var uv = content[i * 3 + 2];
-                if (version == "version 1.00")
+                writer.Write("# Converted from Roblox Mesh " + version + " to obj by BloxDump\n");
+                StringBuilder vertData = new StringBuilder();
+                StringBuilder texData = new StringBuilder();
+                StringBuilder normData = new StringBuilder();
+                StringBuilder faceData = new StringBuilder();
+                for (int i = 0; i < true_faces; i++)
                 {
-                    vertData = vertData.Insert(vertData.Length, "\nv " + (double)vert[0] / 2 + " " + (double)vert[1] / 2 + " " + (double)vert[2] / 2).Replace(",", ".");
+                    var vert = content[i * 3];
+                    var norm = content[i * 3 + 1];
+                    var uv = content[i * 3 + 2];
+                    appendFix(vertData,$"v {(double)vert[0]} {(double)vert[1]} {(double)vert[2]}");
+                    appendFix(normData,$"vn {(double)norm[0]} {(double)norm[1]} {(double)norm[2]}");
+                    appendFix(texData,$"vt {(double)uv[0]} {1.0 - (double)uv[1]} {(double)uv[2]}");
                 }
-                else
+                for (int i = 0; i < (true_faces - 1) / 3; i++)
                 {
-                    vertData = vertData.Insert(vertData.Length, "\nv " + (double)vert[0] + " " + (double)vert[1] + " " + (double)vert[2]).Replace(",", ".");
+                    var pos = (i * 3 + 1);
+                    appendFix(faceData,$"f {pos}/{pos}/{pos} {pos + 1}/{pos + 1}/{pos + 1} {pos + 2}/{pos + 2}/{pos + 2}");
                 }
-                normData = normData.Insert(normData.Length, "\nvn " + (double)norm[0] + " " + (double)norm[1] + " " + (double)norm[2]).Replace(",", ".");
-                texData = texData.Insert(texData.Length, "\nvt " + (double)uv[0] + " " + (1.0 - (double)uv[1]) + " " + (double)uv[2]).Replace(",", ".");
+                writer.Write(vertData);
+                writer.Write(normData);
+                writer.Write(texData);
+                writer.Write(faceData);
             }
-            for (int i = 0; i < (loops - 1) / 3; i++)
-            {
-                var pos = (i * 3 + 1);
-                faceData = faceData.Insert(faceData.Length, "\nf " + pos + "/" + pos + "/" + pos + " " + (pos + 1) + "/" + (pos + 1) + "/" + (pos + 1) + " " + (pos + 2) + "/" + (pos + 2) + "/" + (pos + 2));
-            }
-            fileOut.Write(Encoding.UTF8.GetBytes(vertData));
-            fileOut.Write(Encoding.UTF8.GetBytes(normData));
-            fileOut.Write(Encoding.UTF8.GetBytes(texData));
-            fileOut.Write(Encoding.UTF8.GetBytes(faceData));
-            fileOut.Close();
         }
     }
 
