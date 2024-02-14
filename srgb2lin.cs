@@ -5,36 +5,55 @@ using SixLabors.ImageSharp.PixelFormats;
 
 public static class srgb2lin
 {
+    static byte[] preComputed = new byte[256];
+    static double factor = 1.0 / 2058.61501702;
+
+    static double tolin(int s)
+    {
+        double lin;
+        if (s < 11)
+        {
+            lin = (double)s / 12.92;
+        }
+        else
+        {
+            lin = Math.Pow(((double)s + 0.055) / 1.055, 2.4);
+        }
+        return lin;
+    }
+
+    static bool computed = false;
+
+    static void preCompute()
+    {
+        for(int i = 0; i < 256; i++)
+        {
+            preComputed[i] = (byte)Math.Floor(tolin(i) * factor);
+        }
+        computed = true;
+    }
+
     public static void convert(string outPath)
     {
-        double srgb2lin(int s)
+        if (!computed)
         {
-            double lin;
-            if (s <= 0.0404482362771082)
-            {
-                lin = (double)s / 12.92;
-            }
-            else
-            {
-                lin = Math.Pow(((s + 0.055) / 1.055), 2.4);
-            }
-            return lin;
+            preCompute();
         }
+
         Image<Rgba32> img = Image.Load<Rgba32>(outPath);
-        int y = -1;
-        int x = 0;
-        for (int i = 0; i < img.Height * img.Width; i++)
+
+        for (int y = 0; y < img.Height; y++)
         {
-            y++;
-            if (y == img.Height) {y = 0;x++;}
-            Rgba32 px = img[x, y];
-            img[x, y] = new Rgba32(
-                (byte)Math.Floor(srgb2lin(px.R) / 2058.61501702),
-                (byte)Math.Floor(srgb2lin(px.G) / 2058.61501702),
-                (byte)Math.Floor(srgb2lin(px.B) / 2058.61501702),
-                px.A
-            );
+            for (int x = 0; x < img.Width; x++)
+            {
+                Rgba32 px = img[x, y];
+                px.R = preComputed[px.R];
+                px.G = preComputed[px.G];
+                px.B = preComputed[px.B];
+                img[x, y] = px;
+            }
         }
+
         img.Save(outPath);
     }
 }
