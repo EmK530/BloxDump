@@ -1,13 +1,9 @@
-<h1 align="center">
-  <img src="https://i.imgur.com/drqCT3O.png" alt="BloxRip" width="150">
-  <br>
-  <b>BloxDump</b>
-  <br>
-</h1>
-<p align="center">
-  A program that goes through Roblox's CDN cache and dumps any recognized files.<br>
-  This essentially lets you dump assets from any Roblox game and Roblox in general.
-</p>
+# <img src="https://i.imgur.com/drqCT3O.png" alt="BloxRip" width="48"> BloxDump
+[![Version](https://img.shields.io/github/v/release/EmK530/BloxDump?color=ff7700)](https://github.com/EmK530/BloxDump/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/EmK530/BloxDump/total?color=0077ff)](https://github.com/EmK530/BloxDump/releases)
+
+A program that goes through Roblox's CDN cache and dumps any recognized files.<br>
+This essentially lets you dump assets from any Roblox game and Roblox in general.
 
 ## Support
 List of everything BloxDump can currently dump:<br>
@@ -28,7 +24,7 @@ List of everything BloxDump can currently dump:<br>
 ✅ `version 4.00` <b>By: [EmK530](https://github.com/EmK530)</b><br>
 ✅ `version 4.01` <b>By: [EmK530](https://github.com/EmK530)</b><br>
 ✅ `version 5.00` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-❌ `version 6.00` <b>Currently unused by Roblox</b><br>
+❌ `version 6.00` <b>Currently unused by Roblox and undocumented</b><br>
 
 ## Contributions
 If there is any file format that you want to add support for, feel free to make a pull request!<br>
