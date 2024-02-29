@@ -2,7 +2,7 @@
 [![Version](https://img.shields.io/github/v/release/EmK530/BloxDump?color=ff7700)](https://github.com/EmK530/BloxDump/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/EmK530/BloxDump/total?color=0077ff)](https://github.com/EmK530/BloxDump/releases)
 
-A program that goes through Roblox's CDN cache and dumps any recognized files.<br>
+A program that goes through Roblox's CDN cache and converts any recognized files.<br>
 This essentially lets you dump assets from any Roblox game and Roblox in general.
 
 ## Support
