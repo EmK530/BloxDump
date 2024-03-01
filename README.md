@@ -1,6 +1,6 @@
-# <img src="https://i.imgur.com/drqCT3O.png" alt="BloxRip" width="48"> BloxDump
+# <img src="https://i.imgur.com/drqCT3O.png" alt="BloxDump" width="48"> BloxDump
 [![Version](https://img.shields.io/github/v/release/EmK530/BloxDump?color=ff7700)](https://github.com/EmK530/BloxDump/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/EmK530/BloxDump/total?color=0077ff)](https://github.com/EmK530/BloxDump/releases)
+[<img src="https://img.shields.io/github/downloads/EmK530/BloxDump/total?color=0077ff" alt="Downloads">]()
 
 A program that goes through Roblox's CDN cache and converts any recognized files.<br>
 This essentially lets you dump assets from any Roblox game.
