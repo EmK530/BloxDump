@@ -5,6 +5,18 @@
 A program that goes through Roblox's CDN cache and converts any recognized files.<br>
 This essentially lets you dump assets from any Roblox game.
 
+## How to use
+* Visit the [Releases](https://github.com/EmK530/BloxDump/releases) page and download a version from there.<br>
+If you want more details on BloxDump activity, download the debug zip file.<br>
+
+* Make sure you extract the program into an empty folder, it will create extra folders for dumping.<br>
+You also have to extract `PVRTexToolCLI.exe` because it is used for converting 3D textures.<br>
+
+* After that just open `BloxDump.exe` and you should be good to go!<br>
+
+BloxDump will dump anything downloaded from previous Roblox sessions or you can choose to clear your cache to prevent this.<br>
+Any new cache files that pop up will be dumped so you can simply play a Roblox game and it will dump anything downloaded.
+
 ## Support
 List of everything BloxDump can currently dump:<br>
 <b>2D Textures (PNG / JFIF)</b><br>
@@ -15,23 +27,9 @@ List of everything BloxDump can currently dump:<br>
 <b>Sounds (OGG)</b><br>
 <b>Translations (JSON)</b><br>
 
-## Supported mesh versions
-✅ `version 1.00` <b>By: [EmK530](https://github.com/EmK530)</b><br>
-✅ `version 1.01` <b>By: [EmK530](https://github.com/EmK530)</b><br>
-✅ `version 2.00` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-✅ `version 3.00` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-✅ `version 3.01` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-✅ `version 4.00` <b>By: [EmK530](https://github.com/EmK530)</b><br>
-✅ `version 4.01` <b>By: [EmK530](https://github.com/EmK530)</b><br>
-✅ `version 5.00` <b>By: [ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-❌ `version 6.00` <b>Currently unused by Roblox and undocumented</b><br>
-
 ## Contributions
-If there is any file format that you want to add support for, feel free to make a pull request!<br>
-This is just a simple base for potentially a bigger dumping system.
+BloxDump is fairly complete and most file types are dumped now.<br>If there is something you want to improve feel free to make a pull request!
 
-## How to use
-Visit the [Releases](https://github.com/EmK530/BloxDump/releases) page and download a version from there.<br>
-Both x64 and x86 are provided for your type of system.<br>
-Make sure you extract the program into an empty folder, it will create extra folders for dumping.<br>
-After that just open BloxDump.exe and you should be good to go!
+## Credits
+#### Roblox Mesh to OBJ co-developed by [ApexdaGamer](https://github.com/ApexdaGamer)
+#### Roblox Mesh documentation by [MaximumADHD](https://github.com/MaximumADHD) - [View here](https://devforum.roblox.com/t/roblox-mesh-format/326114)
