@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Text;
-using System.Text.Json.Nodes;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 
 #pragma warning disable CS8600
@@ -10,14 +10,14 @@ using RestSharp;
 
 bool db = false;
 
-string client_name = "BloxDump v4.4.1";
+string client_name = "BloxDump v4.4.2";
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
 void warn(string input) { Console.WriteLine("\x1b[6;30;43m" + "WARN" + "\x1b[0m " + input); }
 void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0m " + input); }
 
-string curpath = System.IO.Path.GetDirectoryName(System.AppContext.BaseDirectory) + "\\";
+string curpath = Path.GetDirectoryName(AppContext.BaseDirectory) + "\\";
 int max_threads = 1;
 List<Thread> threads = new List<Thread>();
 object lockObject = new object();
@@ -315,38 +315,50 @@ void thread(string name)
     }
     else if (output == "ttf")
     {
-        JsonNode js = JsonObject.Parse(Encoding.UTF8.GetString(cont));
+        JObject js = JObject.Parse(Encoding.UTF8.GetString(cont));
         var outname = js["name"];
         File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + ".json", cont);
-        Thread.Sleep(100);
-        int fontcount = ((JsonArray)js["faces"]).Count;
-        print("Found " + fontcount + " fonts");
-        for (int j = 0; j < fontcount; j++)
+        JArray faces = (JArray)js["faces"];
+        print("Found " + faces.Count + " fonts");
+        foreach(JObject item in faces)
         {
-            print("Downloading " + outname + "-" + js["faces"][j]["name"] + ".ttf...");
-            var assetid = js["faces"][j]["assetId"].ToString().Split("rbxassetid://")[1];
-            byte[] fontdata = null;
-            while (true)
+            string asset = item["assetId"].ToString();
+            if (asset.Contains("rbxassetid://"))
             {
-                var req = new RestRequest("https://assetdelivery.roblox.com/v1/asset?id=" + assetid, Method.Get);
-                RestResponse resp = client.Get(req);
-                if (resp.IsSuccessStatusCode)
+                print("Downloading " + outname + "-" + item["name"] + ".ttf...");
+                var assetid = asset.Split("rbxassetid://")[1];
+                byte[] fontdata = null;
+                while (true)
                 {
-                    fontdata = resp.RawBytes;
-                    break;
+                    var req = new RestRequest("https://assetdelivery.roblox.com/v1/asset?id=" + assetid, Method.Get);
+                    RestResponse resp = client.Get(req);
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        fontdata = resp.RawBytes;
+                        break;
+                    }
+                    else
+                    {
+                        warn("Font download failed, retrying...");
+                    }
                 }
-                else
+                File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + "-" + item["name"] + ".ttf", fontdata);
+            } else
+            {
+                if (asset.Contains("rbxasset://"))
                 {
-                    warn("Font download failed, retrying...");
+                    debug("Skipping " + outname + "-" + item["name"] + ".ttf because it is a local asset.");
+                } else
+                {
+                    debug("Skipping " + outname + "-" + item["name"] + ".ttf because the 'rbxassetid' identifer was not found.");
                 }
             }
-            File.WriteAllBytes(curpath + "assets/" + folder + "/" + outname + "-" + js["faces"][j]["name"] + ".ttf", fontdata);
         }
     }
     else if (output == "translation")
     {
-        var js = JsonObject.Parse(Encoding.UTF8.GetString(cont));
-        var locale = js["locale"];
+        JObject js = JObject.Parse(Encoding.UTF8.GetString(cont));
+        string locale = (string)js["locale"];
         File.WriteAllBytes(curpath + "assets/" + folder + "/locale-" + locale + ".json", cont);
     }
     else if (output == "mesh")
