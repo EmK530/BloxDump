@@ -73,7 +73,8 @@ byte[] DownloadFile(string link)
 {
     byte[] cont = null;
     debug("Downloading asset from " + link);
-    while (true)
+    int retryCount = 0;
+    while (retryCount < 3) // Set a limit for retry attempts
     {
         bool success = false;
         string ex = "";
@@ -95,15 +96,22 @@ byte[] DownloadFile(string link)
         }
         else
         {
+            retryCount++;
             if (!success)
             {
-                error("Asset download failed with exception '" + ex + "', retrying...");
+                error("Asset download failed with exception '" + ex + "', retrying attempt " + retryCount + "...");
             }
             else
             {
-                warn("Asset download failed, retrying...");
+                warn("Asset download failed, retrying attempt " + retryCount + "...");
             }
+            Thread.Sleep(100);
         }
+    }
+    if (retryCount == 3)
+    {
+        error("Failed to download asset after 3 attempts, skipping file...");
+        return null;
     }
     return cont;
 }
@@ -216,6 +224,10 @@ void thread(string name)
     else
     {
         cont = DownloadFile(link);
+    }
+    if (cont == null)
+    {
+        return;
     }
     string begin = Encoding.UTF8.GetString(cont[..48]);
     string output = null;
