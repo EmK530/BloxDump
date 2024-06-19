@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 
@@ -8,9 +9,9 @@ using RestSharp;
 #pragma warning disable CS8603
 #pragma warning disable CS8604
 
-bool db = false;
+bool db = true;
 
-string client_name = "BloxDump v4.4.2";
+string client_name = "BloxDump v4.4.3";
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
@@ -73,8 +74,7 @@ byte[] DownloadFile(string link)
 {
     byte[] cont = null;
     debug("Downloading asset from " + link);
-    int retryCount = 0;
-    while (retryCount < 3) // Set a limit for retry attempts
+    while (true)
     {
         bool success = false;
         string ex = "";
@@ -96,22 +96,15 @@ byte[] DownloadFile(string link)
         }
         else
         {
-            retryCount++;
             if (!success)
             {
-                error("Asset download failed with exception '" + ex + "', retrying attempt " + retryCount + "...");
+                error("Asset download failed with exception '" + ex + "', retrying...");
             }
             else
             {
-                warn("Asset download failed, retrying attempt " + retryCount + "...");
+                warn("Asset download failed, retrying...");
             }
-            Thread.Sleep(100);
         }
-    }
-    if (retryCount == 3)
-    {
-        error("Failed to download asset after 3 attempts, skipping file...");
-        return null;
     }
     return cont;
 }
@@ -225,11 +218,7 @@ void thread(string name)
     {
         cont = DownloadFile(link);
     }
-    if (cont == null)
-    {
-        return;
-    }
-    string begin = Encoding.UTF8.GetString(cont[..48]);
+    string begin = Encoding.UTF8.GetString(cont[..Math.Min(48,cont.Length-1)]);
     string output = null;
     string folder = null;
     if (begin.Contains("<roblox!"))
@@ -468,42 +457,49 @@ Console.Title = client_name+" | Idle";
 while (true)
 {
     int counts = 0;
-    string[] files = Directory.GetFiles(tempPath);
-    int total = files.Length;
-    foreach (string i in files)
+    if (Directory.Exists(tempPath))
     {
-        string name = i.Split("\\http\\")[1];
-        counts++;
-        Console.Title = client_name+" | Processing file " + counts + "/" + total + " (" + name + ")";
-        if (!name.StartsWith("RBX"))
+        string[] files = Directory.GetFiles(tempPath);
+        int total = files.Length;
+        foreach (string i in files)
         {
-            if (!known.Contains(name))
+            string name = i.Split("\\http\\")[1];
+            counts++;
+            Console.Title = client_name + " | Processing file " + counts + "/" + total + " (" + name + ")";
+            if (!name.StartsWith("RBX"))
             {
-                known.Add(name);
-                if (threading)
+                if (!known.Contains(name))
                 {
-                    check_thread_life();
-                    while (threads.Count >= max_threads)
+                    known.Add(name);
+                    if (threading)
                     {
-                        Thread.Sleep(50);
                         check_thread_life();
+                        while (threads.Count >= max_threads)
+                        {
+                            Thread.Sleep(50);
+                            check_thread_life();
+                        }
+                        Thread thr = new Thread(() => thread(i));
+                        thr.Start();
+                        lock (lockObject)
+                        {
+                            threads.Add(thr);
+                        }
                     }
-                    Thread thr = new Thread(() => thread(i));
-                    thr.Start();
-                    lock (lockObject)
+                    else
                     {
-                        threads.Add(thr);
+                        thread(i);
                     }
-                } else
-                {
-                    thread(i);
                 }
             }
+            else
+            {
+                warn("Ignoring temporary file: " + name);
+            }
         }
-        else
-        {
-            warn("Ignoring temporary file: " + name);
-        }
+    } else
+    {
+        warn("No temp path exists yet, cannot scan for files to dump.");
     }
     Console.Title = client_name+" | Idle";
     print("Ripping loop completed.");
