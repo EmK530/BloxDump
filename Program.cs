@@ -226,6 +226,10 @@ void thread(string name)
     {
         cont = DownloadFile(link);
     }
+    if(cont == null)
+    {
+        return;
+    }
     string begin = Encoding.UTF8.GetString(cont[..Math.Min(48,cont.Length-1)]);
     string output = null;
     string folder = null;
