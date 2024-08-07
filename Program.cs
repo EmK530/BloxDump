@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
@@ -9,16 +10,21 @@ using RestSharp;
 #pragma warning disable CS8603
 #pragma warning disable CS8604
 
-bool db = true;
+bool db = false;
 
-string client_name = "BloxDump v4.4.3";
+string client_name = "BloxDump v4.4.4";
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
 void warn(string input) { Console.WriteLine("\x1b[6;30;43m" + "WARN" + "\x1b[0m " + input); }
 void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0m " + input); }
 
-string curpath = Path.GetDirectoryName(AppContext.BaseDirectory) + "\\";
+string exedir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+if (string.IsNullOrWhiteSpace(exedir))
+{
+    exedir = AppDomain.CurrentDomain.BaseDirectory;
+}
+string curpath = exedir + "\\";
 int max_threads = 1;
 List<Thread> threads = new List<Thread>();
 object lockObject = new object();
@@ -46,6 +52,7 @@ void system(string cmd)
     startInfo.WindowStyle = ProcessWindowStyle.Hidden;
     startInfo.FileName = "cmd.exe";
     startInfo.Arguments = "/C " + cmd;
+    startInfo.WorkingDirectory = exedir;
     process.StartInfo = startInfo;
     process.Start();
     process.WaitForExit();
@@ -306,25 +313,28 @@ void thread(string name)
     }
     if (!Directory.Exists(curpath + "/temp"))
     {
-        system("cd \"" + curpath + "\" && mkdir temp >nul 2>&1");
+        system("mkdir temp >nul 2>&1");
     }
     if (!Directory.Exists("assets/" + folder))
     {
-        system("cd \"" + curpath + "\" && mkdir \"assets/" + folder + "\" >nul 2>&1");
+        system("mkdir \"assets/" + folder + "\" >nul 2>&1");
     }
     if (output == "ktx")
     {
-        File.WriteAllBytes(curpath + "temp/" + outhash + ".ktx", cont);
+        File.WriteAllBytes(curpath + "temp\\" + outhash + ".ktx", cont);
         while (true)
         {
-            if (File.Exists(curpath + "temp/" + outhash + ".ktx"))
+            if (File.Exists(curpath + "temp\\" + outhash + ".ktx"))
             {
                 break;
+            } else
+            {
+                Thread.Sleep(10);
             }
         }
-        system("cd \"" + curpath + "\" && pvrtextoolcli -i temp/" + outhash + ".ktx -noout -shh -d \"assets/" + folder + "/" + outhash + ".png\"");
+        system("pvrtextoolcli.exe -i \"%cd%\\temp\\" + outhash + ".ktx\" -noout -shh -d \"%cd%\\assets\\" + folder + "\\" + outhash + ".png\"");
         srgb2lin.convert("assets/" + folder + "/" + outhash + ".png");
-        system("del temp\\" + outhash + ".ktx");
+        system("del \"%cd%\\temp\\" + outhash + ".ktx\"");
     }
     else if (output == "ttf")
     {
@@ -390,7 +400,7 @@ void thread(string name)
             folder = "Unsupported " + folder;
             if (!Directory.Exists(curpath + "assets/" + folder))
             {
-                system("cd \"" + curpath + "\" && mkdir \"assets/" + folder + "\" >nul 2>&1");
+                system("mkdir \"assets/" + folder + "\" >nul 2>&1");
             }
             File.WriteAllBytes(curpath + "assets/" + folder + "/" + outhash + ".bm", cont);
         }
