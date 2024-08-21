@@ -12,7 +12,7 @@ using RestSharp;
 
 bool db = false;
 
-string client_name = "BloxDump v4.4.4";
+string client_name = "BloxDump v4.5.0";
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
@@ -122,6 +122,76 @@ byte[] DownloadFile(string link)
         return null;
     }
     return cont;
+}
+
+(string, string, string) ParseEXTM3U(string content)
+{
+    string[] lines = content.Split("\n");
+    string url = "";
+    string beststream = "";
+    string bestRes = "";
+    double beststreamBW = 0d;
+    bool writeNextLine = false;
+    foreach (string i in lines)
+    {
+        if (i.StartsWith("#"))
+        {
+            if (i != "#EXTM3U" && i.Contains(":"))
+            {
+                string[] extsplit = i.Split(":", 2);
+                string identifier = extsplit[0];
+                string config = extsplit[1];
+                if (identifier == "#EXT-X-DEFINE")
+                {
+                    Dictionary<string, object> cfgd = EXTStringToDict(config);
+                    if ((string)cfgd["NAME"] == "RBX-BASE-URI")
+                    {
+                        url = (string)cfgd["VALUE"];
+                    }
+                }
+                else if (identifier == "#EXT-X-STREAM-INF")
+                {
+                    Dictionary<string, object> cfgd = EXTStringToDict(config);
+                    double bw = (double)cfgd["BANDWIDTH"];
+                    if (bw > beststreamBW)
+                    {
+                        beststreamBW = bw;
+                        bestRes = (string)cfgd["RESOLUTION"];
+                        writeNextLine = true;
+                    }
+                }
+            }
+        }
+        else if (writeNextLine)
+        {
+            writeNextLine = false;
+            beststream = i.Replace("{$RBX-BASE-URI}", url);
+        }
+    }
+    return (beststream, bestRes, url);
+}
+
+Dictionary<string, object> EXTStringToDict(string input)
+{
+    Dictionary<string, object> output = new Dictionary<string, object>();
+    string[] items = input.Split(",");
+    foreach(string i in items)
+    {
+        if (i.Contains("="))
+        {
+            string[] spl2 = i.Split("=");
+            string tryParse = spl2[1].Replace("\"", "");
+            if (double.TryParse(tryParse, out double conv))
+            {
+                output.Add(spl2[0], conv);
+            }
+            else
+            {
+                output.Add(spl2[0], tryParse);
+            }
+        }
+    }
+    return output;
 }
 
 void thread(string name)
@@ -240,75 +310,26 @@ void thread(string name)
     string begin = Encoding.UTF8.GetString(cont[..Math.Min(48,cont.Length-1)]);
     string output = null;
     string folder = null;
-    if (begin.Contains("<roblox!"))
-    {
-        print("Dumping asset type: RBXM Animation");
-        output = "rbxm";
-        folder = "Animations";
-    }
-    else if (begin.Contains("<roblox xml"))
-    {
-        debug("Ignoring unsupported XML file.");
-        return;
-    }
-    else if (!begin.Contains("\"version") && begin.Contains("version"))
-    {
-        print("Dumping asset type: Roblox Mesh");
-        output = "mesh";
-        folder = "Meshes";
-    }
-    else if (begin.Contains("{\"locale\":\""))
-    {
-        print("Dumping asset type: JSON translation");
-        output = "translation";
-        folder = "Translations";
-    }
-    else if (begin.Contains("PNG\r\n"))
-    {
-        print("Dumping asset type: PNG");
-        output = "png";
-        folder = "Textures";
-    }
-    else if (begin.Contains("JFIF"))
-    {
-        print("Dumping asset type: JFIF");
-        output = "jfif";
-        folder = "Textures";
-    }
-    else if (begin.Contains("OggS"))
-    {
-        print("Dumping asset type: OGG");
-        output = "ogg";
-        folder = "Sounds";
-    }
-    else if (begin.Contains("TSSE") || begin.Contains("Lavf") || begin.Contains("matroska"))
-    {
-        print("Dumping asset type: MP3");
-        output = "mp3";
-        folder = "Sounds";
-    }
-    else if (begin.Contains("KTX "))
-    {
-        print("Dumping asset type: Khronos Texture");
-        output = "ktx";
-        folder = "KTX Textures";
-    }
-    else if (begin.Contains("\"name\": \""))
-    {
-        print("Dumping asset type: JSON font list");
-        output = "ttf";
-        folder = "Fonts";
-    }
-    else if (begin.Contains("{\"applicationSettings"))
-    {
-        debug("Ignoring FFlag JSON file.");
-        return;
-    }
+    if (begin.Contains("<roblox!")) { print("Dumping asset type: RBXM Animation"); output = "rbxm"; folder = "Animations"; }
+    else if (begin.Contains("<roblox xml")) { debug("Ignoring unsupported XML file."); return; }
+    else if (!begin.Contains("\"version") && begin.Contains("version")) { print("Dumping asset type: Roblox Mesh"); output = "mesh"; folder = "Meshes"; }
+    else if (begin.Contains("{\"locale\":\"")) { print("Dumping asset type: JSON translation"); output = "translation"; folder = "Translations"; }
+    else if (begin.Contains("PNG\r\n")) { print("Dumping asset type: PNG"); output = "png"; folder = "Textures"; }
+    else if (begin.StartsWith("GIF8")) { print("Dumping asset type: GIF"); output = "gif"; folder = "Textures"; }
+    else if (begin.Contains("JFIF")) { print("Dumping asset type: JFIF"); output = "jfif"; folder = "Textures"; }
+    else if (begin.Contains("OggS")) { print("Dumping asset type: OGG"); output = "ogg"; folder = "Sounds"; }
+    else if (begin.Contains("TSSE") || begin.Contains("Lavf") || begin.Contains("matroska")) { print("Dumping asset type: MP3"); output = "mp3"; folder = "Sounds"; }
+    else if (begin.Contains("KTX ")) { print("Dumping asset type: Khronos Texture"); output = "ktx"; folder = "KTX Textures"; }
+    else if (begin.StartsWith("#EXTM3U")) { debug("Parsing EXTM3U file..."); output = "ext"; folder = "Videos"; }
+    else if (begin.Contains("\"name\": \"")) { print("Dumping asset type: JSON font list"); output = "ttf"; folder = "Fonts"; }
+    else if (begin.Contains("{\"applicationSettings")) { debug("Ignoring FFlag JSON file."); return; }
+    else if (begin.Contains("{\"version")) { debug("Ignoring client version JSON file."); return; }
+    else if (begin.Contains("webmB")) { debug("Ignoring VideoFrame segment, the dumping process is handled through another file!"); return; }
     else
     {
         warn("File unrecognized: " + begin);
-        output = "unkn";
-        folder = "Unknown";
+        //output = "unkn";
+        //folder = "Unknown";
         return;
     }
     if (!Directory.Exists(curpath + "/temp"))
@@ -404,6 +425,102 @@ void thread(string name)
             }
             File.WriteAllBytes(curpath + "assets/" + folder + "/" + outhash + ".bm", cont);
         }
+    }
+    else if (output == "ext")
+    {
+        string content = Encoding.UTF8.GetString(cont);
+        if (!content.Contains("RBX-BASE-URI"))
+        {
+            debug("Ignoring undesired EXTM3U file.");
+            return;
+        }
+        print("Dumping asset type: VideoFrame");
+        (string,string,string) M3Data = ParseEXTM3U(content);
+        if(M3Data.Item1 == "")
+        {
+            error("No stream URL found for VideoFrame.");
+            return;
+        }
+        print("Downloading metadata for best resolution: " + M3Data.Item2);
+        string metadata = "";
+        while (true)
+        {
+            var req = new RestRequest(M3Data.Item1, Method.Get);
+            RestResponse resp = client.Get(req);
+            if (resp.IsSuccessStatusCode)
+            {
+                metadata = resp.Content;
+                break;
+            }
+            else
+            {
+                warn("Metadata download failed, retrying...");
+            }
+        }
+        string hash = M3Data.Item3.Split("/").Last();
+        string file = M3Data.Item1.Split("/").Last();
+        string segmentUrl = M3Data.Item1.Replace(file, "");
+        List<string> segments = new List<string>();
+        bool nextIsASegment = false;
+        foreach (string i in metadata.Split("\n"))
+        {
+            if(nextIsASegment)
+            {
+                segments.Add(i);
+                nextIsASegment = false;
+            } else
+            {
+                if (i.StartsWith("#EXTINF:"))
+                {
+                    nextIsASegment = true;
+                }
+            }
+        }
+        string tempdir = curpath + "temp/VideoFrame-" + hash;
+        if (!Directory.Exists(tempdir))
+        {
+            system("mkdir \"temp/VideoFrame-" + hash + "\" >nul 2>&1");
+        }
+        List<string> names = new List<string>();
+        bool succeeded = true;
+        foreach(string i in segments)
+        {
+            print("Downloading " + i + " for VideoFrame (" + hash + ")");
+            while (true)
+            {
+                var req = new RestRequest(segmentUrl + i, Method.Get);
+                RestResponse resp = client.Get(req);
+                if (resp.IsSuccessStatusCode)
+                {
+                    File.WriteAllBytes(tempdir + "/" + i, resp.RawBytes);
+                    print("Repairing downloaded video...");
+                    string name2 = i.Replace(".webm", "-repaired.webm");
+                    names.Add("file '" + name2 + "'");
+                    system($"ffmpeg.exe -i \"%cd%\\temp\\VideoFrame-{hash}\\" + i + "\" -c copy -bsf:v setts=ts=PTS-STARTPTS \"%cd%\\temp\\VideoFrame-"+hash+"\\" + name2 + "\" >nul 2>&1");
+                    if (!File.Exists(tempdir + "/" + name2))
+                    {
+                        error("Repair failed, no output found.");
+                        succeeded = false;
+                        break;
+                    }
+                    File.Delete(tempdir + "/" + i);
+                    break;
+                }
+                else
+                {
+                    warn("Video download failed, retrying...");
+                }
+            }
+            if (!succeeded)
+                break;
+        }
+        if (succeeded)
+        {
+            File.WriteAllLines(tempdir + "/" + "videos.txt", names.ToArray());
+            print("Merging VideoFrame segments...");
+            system($"ffmpeg -f concat -safe 0 -i \"%cd%\\temp\\VideoFrame-{hash}\\videos.txt\" -c copy \"%cd%\\assets\\" + folder + "\\" + hash + ".webm\" -y >nul 2>&1");
+        }
+        Directory.Delete(tempdir, true);
     }
     else if (output != null)
     {
