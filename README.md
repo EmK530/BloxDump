@@ -25,6 +25,7 @@ List of everything BloxDump can currently dump:<br>
 <b>Fonts (TTF)</b><br>
 <b>Meshes (OBJ)</b><br>
 <b>Sounds (OGG)</b><br>
+<b>Videos (WEBM)</b><br>
 <b>Translations (JSON)</b><br>
 
 ## Contributions
