@@ -10,12 +10,12 @@ This essentially lets you dump assets from any Roblox game.
 If you want more details on BloxDump activity, download the debug zip file.<br>
 
 * Make sure you extract the program into an empty folder, it will create extra folders for dumping.<br>
-You also have to extract `PVRTexToolCLI.exe` because it is used for converting 3D textures.<br>
+You also have to extract `PVRTexToolCLI.exe` and `ffmpeg.exe` as they are necessary for conversion.
 
 * After that just open `BloxDump.exe` and you should be good to go!<br>
 
-BloxDump will dump anything downloaded from previous Roblox sessions or you can choose to clear your cache to prevent this.<br>
-Any new cache files that pop up will be dumped so you can simply play a Roblox game and it will dump anything downloaded.
+When starting you will be prompted if you want to use multithreading, this uses more CPU but dumps assets faster.<br>
+To avoid dumping assets from previous sessions, you have the option to clear your cache. Any new cache files will be dumped in real-time.
 
 ## Support
 List of everything BloxDump can currently dump:<br>
