@@ -32,5 +32,5 @@ List of everything BloxDump can currently dump:<br>
 BloxDump is fairly complete and most file types are dumped now.<br>If there is something you want to improve feel free to make a pull request!
 
 ## Credits
-#### Roblox Mesh to OBJ co-developed by [ApexdaGamer](https://github.com/ApexdaGamer)
-#### Roblox Mesh documentation by [MaximumADHD](https://github.com/MaximumADHD) - [View here](https://devforum.roblox.com/t/roblox-mesh-format/326114)
+<b>Roblox Mesh to OBJ</b> co-developed by <b>[ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
+<b>Roblox Mesh documentation</b> by <b>[MaximumADHD](https://github.com/MaximumADHD)</b> - [View here](https://devforum.roblox.com/t/roblox-mesh-format/326114)
