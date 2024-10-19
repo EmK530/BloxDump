@@ -10,9 +10,9 @@ using RestSharp;
 #pragma warning disable CS8603
 #pragma warning disable CS8604
 
-bool db = false;
+bool db = true;
 
-string client_name = "BloxDump v5.1.0" + (db ? " (debug)" : "");
+string client_name = "BloxDump v5.1.1" + (db ? " (debug)" : "");
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
@@ -361,8 +361,20 @@ void thread(string name)
     string link = ReadString((int)linklen);
     Skip(1);
     uint reqStatusCode = ReadUInt32();
-    string[] s = link.Split("/");
+
+    //safer hash because roblox update
+
+    string[] s = link.Split(".com/");
     string outhash = s[s.Length - 1];
+    if(outhash.Contains("?"))
+    {
+        outhash = outhash.Split("?")[0];
+    }
+    if(outhash.Contains("DAY-"))
+    {
+        outhash = outhash.Split("DAY-")[1];
+    }
+    
     if (bans.Contains(outhash))
     {
         debug("Ignoring blocked hash.");
