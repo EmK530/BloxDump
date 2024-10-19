@@ -18,15 +18,16 @@ When starting you will be prompted if you want to clear your cache.<br>
 This is to prevent any old assets from being caught. Any new cache files that show up will be dumped in real-time.
 
 ## Support
-List of everything BloxDump can currently dump:<br>
-<b>2D Textures (PNG / JFIF)</b><br>
-<b>3D Textures (KTX => PNG)</b><br>
-<b>Animations (RBXM)</b><br>
-<b>Fonts (TTF)</b><br>
-<b>Meshes (OBJ)</b><br>
-<b>Sounds (OGG)</b><br>
-<b>Videos (WEBM)</b><br>
-<b>Translations (JSON)</b><br>
+List of everything BloxDump can currently dump:
+
+    • 2D Textures (PNG / JFIF)
+    • 3D Textures (KTX => PNG)
+    • Animations (RBXM)
+    • Fonts (TTF)
+    • Meshes (OBJ)
+    • Sounds (OGG)
+    • Videos (WEBM)
+    • Translations (JSON)
 
 ## Contributions
 BloxDump is fairly complete and most file types are dumped now.<br>If there is something you want to improve feel free to make a pull request!
