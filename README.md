@@ -14,8 +14,8 @@ You also have to extract `PVRTexToolCLI.exe` and `ffmpeg.exe` as they are necess
 
 * After that just open `BloxDump.exe` and you should be good to go!<br>
 
-When starting you will be prompted if you want to use multithreading, this uses more CPU but dumps assets faster.<br>
-To avoid dumping assets from previous sessions, you have the option to clear your cache. Any new cache files will be dumped in real-time.
+When starting you will be prompted if you want to clear your cache.<br>
+This is to prevent any old assets from being caught. Any new cache files that show up will be dumped in real-time.
 
 ## Support
 List of everything BloxDump can currently dump:<br>
