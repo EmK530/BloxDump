@@ -12,7 +12,7 @@ using RestSharp;
 
 bool db = false;
 
-string client_name = "BloxDump v5.0.0";
+string client_name = "BloxDump v5.1.0" + (db ? " (debug)" : "");
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
@@ -25,9 +25,32 @@ if (string.IsNullOrWhiteSpace(exedir))
     exedir = AppDomain.CurrentDomain.BaseDirectory;
 }
 string curpath = exedir + "\\";
-int max_threads = 1;
+
+int max_threads = Environment.ProcessorCount;
+bool manualThreadCount = false;
+bool promptCacheClear = true;
+bool autoClear = false;
+
 List<Thread> threads = new List<Thread>();
 object lockObject = new object();
+
+if(File.Exists("config.json"))
+{
+    JObject config = JObject.Parse(File.ReadAllText("config.json"));
+    manualThreadCount = (bool)config["promptThreadCount"];
+    promptCacheClear = (bool)config["promptCacheClear"];
+    autoClear = (bool)config["noprompt_autoClearCache"];
+}
+else
+{
+    File.WriteAllText("config.json", """
+        {
+            "promptThreadCount": false,
+            "promptCacheClear": true,
+            "noprompt_autoClearCache": false
+        }
+        """);
+}
 
 void check_thread_life()
 {
@@ -58,7 +81,69 @@ void system(string cmd)
     process.WaitForExit();
 }
 
-string tempPath = Path.GetTempPath() + "Roblox\\http\\";
+string webPath = Path.GetTempPath() + "Roblox\\http\\";
+string UWPPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + 
+    "\\Packages\\ROBLOXCORPORATION.ROBLOX_55nm5eh3cm0pr\\LocalState\\http\\";
+
+string usePath = webPath; // might change later down
+
+Console.Clear();
+system("cls");
+//those clears ensure that the print labels work
+
+bool isDir1 = Directory.Exists(webPath);
+bool isDir2 = Directory.Exists(UWPPath);
+
+bool panic = false;
+
+Console.Title = client_name + " | Setup";
+
+if (isDir1 && isDir2)
+{
+    Dictionary<string, string> paths = new Dictionary<string, string>()
+    {
+        ["Standard Version"] = webPath,
+        ["UWP Version (Microsoft Store)"] = UWPPath
+    };
+
+    Console.WriteLine("Which version of Roblox do you use?");
+    Console.WriteLine("If your input is incorrect then dumping will not work as intended.\n");
+    Console.WriteLine($"1: Standard Version\n2: UWP Version (Microsoft Store)");
+    bool done = false;
+    while (!done)
+    {
+        Console.Write("\nInput: ");
+        string get = Console.ReadLine();
+        if (int.TryParse(get, out int parsed))
+        {
+            switch(parsed)
+            {
+                case 1:
+                    usePath = webPath;
+                    done = true;
+                    break;
+                case 2:
+                    usePath = UWPPath;
+                    done = true;
+                    break;
+                default:
+                    warn($"Unrecognized choice: {parsed}");
+                    break;
+            }
+        }
+    }
+}
+else if(isDir2 && !isDir1)
+{
+    usePath = UWPPath;
+} else if(!isDir1 && !isDir2)
+{
+    // no temp path exists, panic
+    panic = true;
+}
+
+system("cls");
+
 List<string> known = new List<string>();
 List<string> knownlinks = new List<string>();
 string[] bans =
@@ -528,20 +613,11 @@ void thread(string name)
     }
 }
 
-bool threading = false;
+bool threading = true;
 
-Console.Clear();
-system("cls");
-//those clears ensure that the print labels work
-Console.Title = client_name+" | Prompt";
-Console.WriteLine("Do you want to use multithreading?");
-Console.WriteLine("Enabling it will make dumping faster but will use more CPU.");
-Console.Write("\nType Y to enable multithreading: ");
-if (Console.ReadLine().ToLower() == "y")
+if (manualThreadCount)
 {
     Console.Clear();
-    print("Multithreading enabled.\n");
-    threading = true;
     Console.WriteLine("How many threads do you want to use?");
     Console.WriteLine("Your CPU has " + Environment.ProcessorCount + " threads. Please input a number less or equal to it.");
     Console.WriteLine("More threads = faster dumping & more CPU usage.");
@@ -579,16 +655,28 @@ if (Console.ReadLine().ToLower() == "y")
 
 Console.Clear();
 
-Console.WriteLine("Do you want to clear Roblox's cache?");
-Console.WriteLine("If you clear the cache then any assets downloaded from previous sessions will not be dumped.");
-Console.Write("\nType Y to clear or anything else to proceed: ");
-if (Console.ReadLine().ToLower() == "y")
+if (promptCacheClear)
 {
-    Console.WriteLine();
-    print("Deleting Roblox cache...");
-    system("del " + tempPath + "* /q");
+    Console.WriteLine("Do you want to clear Roblox's cache?");
+    Console.WriteLine("If you clear the cache then any assets downloaded from previous sessions will not be dumped.");
+    Console.Write("\nType Y to clear or anything else to proceed: ");
+    if (Console.ReadLine().ToLower() == "y")
+    {
+        Console.WriteLine();
+        print("Deleting Roblox cache...");
+        system("del " + usePath + "* /q");
+        Console.Clear();
+    }
+} else
+{
+    if(autoClear)
+    {
+        print("Deleting Roblox cache...");
+        system("del " + usePath + "* /q");
+        Console.Clear();
+    }
 }
-Console.Clear();
+
 print("BloxDump started.");
 
 Console.Title = client_name+" | Idle";
@@ -596,9 +684,26 @@ Console.Title = client_name+" | Idle";
 while (true)
 {
     int counts = 0;
-    if (Directory.Exists(tempPath))
+    if(panic)
     {
-        string[] files = Directory.GetFiles(tempPath);
+        Console.Title = client_name + " | Waiting";
+        bool iDir1 = Directory.Exists(webPath);
+        bool iDir2 = Directory.Exists(UWPPath);
+        if(iDir1)
+        {
+            usePath = webPath; panic = false; continue;
+        } else if(iDir2)
+        {
+            usePath = UWPPath; panic = false; continue;
+        } else
+        {
+            warn("Waiting for temp directory to show up (P)...");
+            Thread.Sleep(5000);
+        }
+    }
+    if (Directory.Exists(usePath))
+    {
+        string[] files = Directory.GetFiles(usePath);
         int total = files.Length;
         foreach (string i in files)
         {
@@ -638,9 +743,10 @@ while (true)
         }
     } else
     {
-        warn("No temp path exists yet, cannot scan for files to dump.");
+        Console.Title = client_name + " | Waiting";
+        warn("Waiting for temp directory to show up...");
     }
     Console.Title = client_name+" | Idle";
     print("Ripping loop completed.");
-    Thread.Sleep(10000);
+    Thread.Sleep(5000);
 }
