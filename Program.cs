@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text;
-using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 
@@ -10,9 +9,7 @@ using RestSharp;
 #pragma warning disable CS8603
 #pragma warning disable CS8604
 
-bool db = true;
-
-string client_name = "BloxDump v5.1.1" + (db ? " (debug)" : "");
+bool db = false;
 
 void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input); } }
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
@@ -34,23 +31,27 @@ bool autoClear = false;
 List<Thread> threads = new List<Thread>();
 object lockObject = new object();
 
-if(File.Exists("config.json"))
+if (File.Exists("config.json"))
 {
     JObject config = JObject.Parse(File.ReadAllText("config.json"));
-    manualThreadCount = (bool)config["promptThreadCount"];
-    promptCacheClear = (bool)config["promptCacheClear"];
-    autoClear = (bool)config["noprompt_autoClearCache"];
+    if (config.ContainsKey("promptThreadCount")) { manualThreadCount = (bool)config["promptThreadCount"]; }
+    if (config.ContainsKey("promptCacheClear")) { promptCacheClear = (bool)config["promptCacheClear"]; }
+    if (config.ContainsKey("noprompt_autoClearCache")) { autoClear = (bool)config["noprompt_autoClearCache"]; }
+    if (config.ContainsKey("debugMode")) { db = (bool)config["debugMode"]; }
 }
 else
 {
     File.WriteAllText("config.json", """
         {
+            "debugMode": false,
             "promptThreadCount": false,
             "promptCacheClear": true,
             "noprompt_autoClearCache": false
         }
         """);
 }
+
+string client_name = "BloxDump v5.1.2" + (db ? " (debug)" : "");
 
 void check_thread_life()
 {
@@ -146,6 +147,7 @@ system("cls");
 
 List<string> known = new List<string>();
 List<string> knownlinks = new List<string>();
+List<string> knownhashes = new List<string>();
 string[] bans =
 {
     "noFilter",
@@ -359,6 +361,11 @@ void thread(string name)
     Skip(4);
     uint linklen = ReadUInt32();
     string link = ReadString((int)linklen);
+    if (knownlinks.Contains(link))
+    {
+        debug("Ignoring duplicate cdn link.");
+        return;
+    }
     Skip(1);
     uint reqStatusCode = ReadUInt32();
 
@@ -374,16 +381,25 @@ void thread(string name)
     {
         outhash = outhash.Split("DAY-")[1];
     }
-    
+
+    if (knownhashes.Contains(outhash))
+    {
+        debug("Ignoring duplicate hash.");
+        return;
+    }
+    knownhashes.Add(outhash);
     if (bans.Contains(outhash))
     {
         debug("Ignoring blocked hash.");
         return;
     }
-    if (knownlinks.Contains(link))
+    foreach(string i in bans)
     {
-        debug("Ignoring duplicate cdn link.");
-        return;
+        if(outhash.Contains(i))
+        {
+            debug("Ignoring blocked hash.");
+            return;
+        }
     }
     knownlinks.Add(link);
     byte[] cont;
@@ -509,7 +525,7 @@ void thread(string name)
         string noDotVer = numOnlyVer.Replace(".", "");
         if (BloxMesh.supported_mesh_versions.Contains(meshVersion))
         {
-            debug("Converting mesh version " + numOnlyVer);
+            debug("Converting mesh version " + numOnlyVer + " for hash " + outhash);
             BloxMesh.Convert(cont, folder, outhash);
         }
         else
@@ -693,6 +709,8 @@ print("BloxDump started.");
 
 Console.Title = client_name+" | Idle";
 
+var ignoreSet = new HashSet<string>(known);
+
 while (true)
 {
     int counts = 0;
@@ -717,15 +735,17 @@ while (true)
     {
         string[] files = Directory.GetFiles(usePath);
         int total = files.Length;
+        bool changed = false;
         foreach (string i in files)
         {
             string name = i.Split("\\http\\")[1];
             counts++;
-            Console.Title = client_name + " | Processing file " + counts + "/" + total + " (" + name + ")";
             if (!name.StartsWith("RBX"))
             {
-                if (!known.Contains(name))
+                if (!ignoreSet.Contains(name))
                 {
+                    Console.Title = client_name + " | Processing file " + counts + "/" + total + " (" + name + ")";
+                    changed = true;
                     known.Add(name);
                     if (threading)
                     {
@@ -752,6 +772,10 @@ while (true)
             {
                 warn("Ignoring temporary file: " + name);
             }
+        }
+        if (changed)
+        {
+            ignoreSet = new HashSet<string>(known);
         }
     } else
     {
