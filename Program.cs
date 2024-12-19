@@ -23,6 +23,13 @@ if (string.IsNullOrWhiteSpace(exedir))
 }
 string curpath = exedir + "\\";
 
+//those clears ensure that the print labels work
+Console.Clear();
+system("cls");
+
+if (!File.Exists(curpath+"PVRTexToolCLI.exe")) { error("Missing dependency 'PVRTexToolCLI.exe' in program folder, did you forget to download 'dependencies.zip'?"); }
+if (!File.Exists(curpath+"ffmpeg.exe")) { error("Missing dependency 'ffmpeg.exe' in program folder, did you forget to download 'dependencies.zip'?"); }
+
 int max_threads = Environment.ProcessorCount;
 bool manualThreadCount = false;
 bool promptCacheClear = true;
@@ -31,9 +38,9 @@ bool autoClear = false;
 List<Thread> threads = new List<Thread>();
 object lockObject = new object();
 
-if (File.Exists("config.json"))
+if (File.Exists(curpath+"config.json"))
 {
-    JObject config = JObject.Parse(File.ReadAllText("config.json"));
+    JObject config = JObject.Parse(File.ReadAllText(curpath+"config.json"));
     if (config.ContainsKey("promptThreadCount")) { manualThreadCount = (bool)config["promptThreadCount"]; }
     if (config.ContainsKey("promptCacheClear")) { promptCacheClear = (bool)config["promptCacheClear"]; }
     if (config.ContainsKey("noprompt_autoClearCache")) { autoClear = (bool)config["noprompt_autoClearCache"]; }
@@ -41,7 +48,7 @@ if (File.Exists("config.json"))
 }
 else
 {
-    File.WriteAllText("config.json", """
+    File.WriteAllText(curpath+"config.json", """
         {
             "debugMode": false,
             "promptThreadCount": false,
@@ -51,7 +58,7 @@ else
         """);
 }
 
-string client_name = "BloxDump v5.1.2" + (db ? " (debug)" : "");
+string client_name = "BloxDump v5.1.3" + (db ? " (debug)" : "");
 
 void check_thread_life()
 {
@@ -87,10 +94,6 @@ string UWPPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplic
     "\\Packages\\ROBLOXCORPORATION.ROBLOX_55nm5eh3cm0pr\\LocalState\\http\\";
 
 string usePath = webPath; // might change later down
-
-Console.Clear();
-system("cls");
-//those clears ensure that the print labels work
 
 bool isDir1 = Directory.Exists(webPath);
 bool isDir2 = Directory.Exists(UWPPath);
@@ -456,18 +459,17 @@ void thread(string name)
     if (output == "ktx")
     {
         File.WriteAllBytes(curpath + "temp\\" + outhash + ".ktx", cont);
-        while (true)
-        {
-            if (File.Exists(curpath + "temp\\" + outhash + ".ktx"))
-            {
-                break;
-            } else
-            {
-                Thread.Sleep(10);
-            }
+        if (!File.Exists(curpath + "temp\\" + outhash + ".ktx")) {
+            warn("Something went wrong writing KTX file: " + outhash + ".ktx");
+            return;
         }
         system("pvrtextoolcli.exe -i \"%cd%\\temp\\" + outhash + ".ktx\" -noout -shh -d \"%cd%\\assets\\" + folder + "\\" + outhash + ".png\"");
-        srgb2lin.convert("assets/" + folder + "/" + outhash + ".png");
+        if (!File.Exists(curpath + "assets\\" + folder + "\\" + outhash + ".png"))
+        {
+            warn("Something went wrong converting the KTX file: " + outhash + ".ktx");
+            return;
+        }
+        srgb2lin.convert(curpath + "assets\\" + folder + "\\" + outhash + ".png");
         system("del \"%cd%\\temp\\" + outhash + ".ktx\"");
     }
     else if (output == "ttf")
