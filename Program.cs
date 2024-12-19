@@ -15,6 +15,7 @@ void debug(string input) { if (db) { Console.WriteLine("\x1b[6;30;44m" + "DEBUG"
 void print(string input) { Console.WriteLine("\x1b[6;30;47m" + "INFO" + "\x1b[0m " + input); }
 void warn(string input) { Console.WriteLine("\x1b[6;30;43m" + "WARN" + "\x1b[0m " + input); }
 void error(string input) { Console.WriteLine("\x1b[6;30;41m" + "ERROR" + "\x1b[0m " + input); }
+void fatal(string input) { Console.WriteLine("\x1b[6;30;41m" + "FATAL" + "\x1b[0m " + input); Thread.Sleep(5000); Environment.Exit(0); }
 
 string exedir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 if (string.IsNullOrWhiteSpace(exedir))
@@ -27,8 +28,8 @@ string curpath = exedir + "\\";
 Console.Clear();
 system("cls");
 
-if (!File.Exists(curpath+"PVRTexToolCLI.exe")) { error("Missing dependency 'PVRTexToolCLI.exe' in program folder, did you forget to download 'dependencies.zip'?"); }
-if (!File.Exists(curpath+"ffmpeg.exe")) { error("Missing dependency 'ffmpeg.exe' in program folder, did you forget to download 'dependencies.zip'?"); }
+if (!File.Exists(curpath+"PVRTexToolCLI.exe")) { fatal("Missing dependency 'PVRTexToolCLI.exe' in program folder, did you forget to download 'dependencies.zip'?"); }
+if (!File.Exists(curpath+"ffmpeg.exe")) { fatal("Missing dependency 'ffmpeg.exe' in program folder, did you forget to download 'dependencies.zip'?"); }
 
 int max_threads = Environment.ProcessorCount;
 bool manualThreadCount = false;
