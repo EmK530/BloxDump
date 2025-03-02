@@ -59,7 +59,7 @@ else
         """);
 }
 
-string client_name = "BloxDump v5.1.3" + (db ? " (debug)" : "");
+string client_name = "BloxDump v5.1.4" + (db ? " (debug)" : "");
 
 void check_thread_life()
 {
@@ -367,7 +367,7 @@ void thread(string name)
     string link = ReadString((int)linklen);
     if (knownlinks.Contains(link))
     {
-        debug("Ignoring duplicate cdn link.");
+        debug($"Ignoring duplicate cdn link.");
         return;
     }
     Skip(1);
@@ -375,15 +375,23 @@ void thread(string name)
 
     //safer hash because roblox update
 
-    string[] s = link.Split(".com/");
-    string outhash = s[s.Length - 1];
-    if(outhash.Contains("?"))
+    string outhash = "";
+    if (link.Contains("127.0.0.8"))
     {
-        outhash = outhash.Split("?")[0];
+        outhash = link.Split("127.0.0.8/")[1];
     }
-    if(outhash.Contains("DAY-"))
+    else
     {
-        outhash = outhash.Split("DAY-")[1];
+        string[] s = link.Split(".com/");
+        outhash = s[s.Length - 1];
+        if (outhash.Contains("?"))
+        {
+            outhash = outhash.Split("?")[0];
+        }
+        if (outhash.Contains("DAY-"))
+        {
+            outhash = outhash.Split("DAY-")[1];
+        }
     }
 
     if (knownhashes.Contains(outhash))
@@ -391,7 +399,6 @@ void thread(string name)
         debug("Ignoring duplicate hash.");
         return;
     }
-    knownhashes.Add(outhash);
     if (bans.Contains(outhash))
     {
         debug("Ignoring blocked hash.");
@@ -405,7 +412,6 @@ void thread(string name)
             return;
         }
     }
-    knownlinks.Add(link);
     byte[] cont;
     if (reqStatusCode == 200)
     {
@@ -418,12 +424,16 @@ void thread(string name)
     }
     else
     {
-        cont = DownloadFile(link);
+        //cont = DownloadFile(link);
+        // redirects should not be followed, it's redundant
+        return;
     }
     if(cont == null)
     {
         return;
     }
+    knownlinks.Add(link);
+    knownhashes.Add(outhash);
     string begin = Encoding.UTF8.GetString(cont[..Math.Min(48,cont.Length-1)]);
     string output = null;
     string folder = null;
