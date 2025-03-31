@@ -24,10 +24,12 @@ List of everything BloxDump can currently dump:
     • 3D Textures (KTX => PNG)
     • Animations (RBXM)
     • Fonts (TTF)
+    • Meshes (OBJ)
     • Sounds (OGG)
     • Videos (WEBM)
     • Translations (JSON)
-Meshes are currently unavailable due to Roblox releasing a new mesh version and migrating all meshes to it.<br>
+<h3>NOTICE</h3>
+Mesh dumping is currently impacted due to Roblox releasing a new version (v7) and migrating a lot of meshes to it.<br>
 I will try to add support eventually, but for now you may run into issues!
 
 ## Contributions
