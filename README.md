@@ -28,9 +28,6 @@ List of everything BloxDump can currently dump:
     • Sounds (OGG)
     • Videos (WEBM)
     • Translations (JSON)
-<h3>NOTICE</h3>
-Mesh dumping is currently impacted due to Roblox releasing a new version (v7) and migrating a lot of meshes to it.<br>
-I will try to add support eventually, but for now you may run into issues!
 
 ## Contributions
 BloxDump is fairly complete and most file types are dumped now.<br>If there is something you want to improve feel free to make a pull request!
