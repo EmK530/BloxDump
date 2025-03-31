@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.5.33530.505
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BloxDump", "BloxDump.csproj", "{AB2E9FB8-A90A-48B5-A36D-478B14D437A7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BloxDump", "BloxDump.csproj", "{FD33FDE5-B147-4435-B15E-FBC8BB5D2F3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,12 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{AB2E9FB8-A90A-48B5-A36D-478B14D437A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AB2E9FB8-A90A-48B5-A36D-478B14D437A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AB2E9FB8-A90A-48B5-A36D-478B14D437A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AB2E9FB8-A90A-48B5-A36D-478B14D437A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FD33FDE5-B147-4435-B15E-FBC8BB5D2F3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FD33FDE5-B147-4435-B15E-FBC8BB5D2F3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FD33FDE5-B147-4435-B15E-FBC8BB5D2F3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FD33FDE5-B147-4435-B15E-FBC8BB5D2F3D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {39C45B03-E6C8-4F9B-8636-0F4D93761C24}
 	EndGlobalSection
 EndGlobal

@@ -1,4 +1,4 @@
-// Script made by zuzaratrust and EmK530
+﻿// Script made by zuzaratrust and EmK530
 
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -24,9 +24,9 @@ public static class srgb2lin
 
     static bool computed = false;
 
-    static void preCompute()
+    public static void preCompute()
     {
-        for(int i = 0; i < 256; i++)
+        for (int i = 0; i < 256; i++)
         {
             preComputed[i] = (byte)Math.Floor(tolin(i) * factor);
         }
