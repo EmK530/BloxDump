@@ -22,6 +22,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="BCnEncoder.Net" Version="2.2.0" />
 		<PackageReference Include="Evergine.Bindings.Draco" Version="2024.7.19.9" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="RestSharp" Version="112.1.0" />
