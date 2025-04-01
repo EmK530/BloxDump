@@ -130,7 +130,7 @@ class Essentials
             var s when s.StartsWith("RIFF") && s.Contains("WEBP") => (BlockAvatarImages ? (AssetType.WebP, "webp", "WebP", "Textures") : (AssetType.NoConvert, "webp", "WebP", "Textures")),
             var s when s.StartsWith("OggS") => (AssetType.NoConvert, "ogg", "OGG", "Sounds"),
             var s when s.StartsWith("ID3") || (cnt.Length > 2 && (cnt[0] & 0xFF) == 0xFF && (cnt[1] & 0xE0) == 0xE0) => (AssetType.NoConvert, "mp3", "MP3", "Sounds"),
-            var s when s.Contains("KTX ") => (AssetType.Khronos, "", "", ""),
+            var s when s.Contains("KTX 11") => (AssetType.Khronos, "", "", ""),
             var s when s.StartsWith("#EXTM3U") => (AssetType.EXTM3U, "", "", ""),
             var s when s.Contains("\"name\": \"") => (AssetType.FontList, "", "", ""),
             var s when s.Contains("{\"applicationSettings") => (AssetType.Ignored, "", "FFlags JSON", ""),

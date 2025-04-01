@@ -1,9 +1,14 @@
-﻿#pragma warning disable CS8600,CS8602
+﻿#pragma warning disable CS8600,CS8602,CS8604
 
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Text;
 using RestSharp;
+using BCnEncoder.Decoder;
+using BCnEncoder.Shared.ImageFiles;
+using BCnEncoder.Shared;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 using static Essentials;
 
@@ -250,27 +255,34 @@ public static class Khronos
     public static async Task Process(int whoami, string dumpName, byte[] content)
     {
         string outDir = $"assets\\KTX Textures";
-        if (!Directory.Exists("temp"))
-        {
-            Directory.CreateDirectory("temp");
-        }
-        if (!File.Exists(dependDir+"PVRTexToolCLI.exe"))
-        {
-            error($"Thread-{whoami}: PVRTexToolCLI does not exist, cannot convert Khronos Texture.");
-            return;
-        }
-        if (File.Exists($"{outDir}\\{dumpName}.png"))
-        {
-            debug($"Thread-{whoami}: Skipping already dumped Khronos Texture.");
-            return;
-        }
-        print($"Thread-{whoami}: Converting Khronos Texture...");
-        await File.WriteAllBytesAsync($"temp/{dumpName}.ktx", content);
         if (!Directory.Exists(outDir))
         {
             Directory.CreateDirectory(outDir);
         }
-        await system($"%temp%\\BloxDump\\PVRTexToolCLI.exe -ics sRGB -i \"%cd%\\temp\\{dumpName}.ktx\" -shh -noout -d \"%cd%\\{outDir}\\{dumpName}.png\"");
-        File.Delete($"temp/{dumpName}.ktx");
+        try
+        {
+            print($"Thread-{whoami}: Converting Khronos Texture...");
+            MemoryStream ms = new MemoryStream(content);
+            KtxFile ktxFile = KtxFile.Load(ms);
+            BcDecoder decoder = new BcDecoder();
+            ColorRgba32[] decodedImage = decoder.Decode(ktxFile);
+            int width = (int)ktxFile.header.PixelWidth;
+            int height = (int)ktxFile.header.PixelHeight;
+            using var image = new Image<Rgba32>(width, height);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    int index = y * width + x;
+                    ColorRgba32 color = decodedImage[index];
+                    image[x, y] = new Rgba32(color.r, color.g, color.b, color.a);
+                }
+            }
+            image.SaveAsPng($"{outDir}\\{dumpName}.png");
+        } catch(Exception ex)
+        {
+            error($"Thread-{whoami}: Error converting Khronos Texture! (" + ex.Message + ")");
+            return;
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿#pragma warning disable CS8604
+﻿#pragma warning disable CS8602,CS8604
 
 using Newtonsoft.Json.Linq;
 using static Essentials;
@@ -29,12 +29,6 @@ class Entry
             bool downloaded = await DownloadDependencyAsync("ffmpeg.exe", "https://drive.usercontent.google.com/download?id=1uflkRywFWnySw3oohWoQmwDzhcqpbq0U&export=download&confirm=t");
             if (!downloaded)
                 fatal("Could not download dependency: ffmpeg.exe");
-        }
-        if (!File.Exists(dependDir + "PVRTexToolCLI.exe"))
-        {
-            bool downloaded = await DownloadDependencyAsync("PVRTexToolCLI.exe", "https://drive.usercontent.google.com/download?id=1UnWvdqRUHxSFxHIYKDvh4sG2sj9ui8tF&export=download&confirm=t");
-            if (!downloaded)
-                fatal("Could not download dependency: PVRTexToolCLI.exe");
         }
         Console.Clear();
 
@@ -139,7 +133,7 @@ class Entry
             }
         }
 
-        //for (int i = 0; i < 1; i++)
+        //for (int i = 0; i < 2; i++)
         for (int i = 0; i < Math.Max(Environment.ProcessorCount-1,1); i++)
         {
             int thr = i + 1;
