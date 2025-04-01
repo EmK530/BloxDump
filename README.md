@@ -7,11 +7,7 @@ This essentially lets you dump assets from any Roblox game.
 
 ## How to use
 * Visit the [Releases](https://github.com/EmK530/BloxDump/releases) page and download a version from there.<br>
-If it's your first time, download the `dependencies.zip` file as well and extract the contents with BloxDump.<br>
-
-* Make sure you extract the program into an empty folder, it will create extra folders for dumping.<br>
-Also extract the dependencies into this folder as well. It contains programs used for certain conversions.
-
+* Make sure you extract the program including the runtimes folder somewhere safe, it will create extra folders for dumping.<br>
 * After that just open `BloxDump.exe` and you should be good to go!<br>
 
 When starting you will be prompted if you want to clear your cache.<br>
