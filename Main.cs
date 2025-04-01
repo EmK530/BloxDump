@@ -8,7 +8,6 @@ class Entry
     public static async Task Main(string[] args)
     {
         //Assets.Init();
-        srgb2lin.preCompute();
         Console.Title = $"{app_name} {app_version}";
 
         CancellationTokenSource cts = new CancellationTokenSource(); // currently unused lol
