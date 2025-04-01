@@ -1,5 +1,5 @@
 # <img src="https://i.imgur.com/drqCT3O.png" alt="BloxDump" width="48"> BloxDump
-[![Version](https://img.shields.io/github/v/release/EmK530/BloxDump?color=ff7700)](https://github.com/EmK530/BloxDump/releases/latest)
+[![Version](https://img.shields.io/github/v/release/EmK530/BloxDump?color=ff7700&nocache1)](https://github.com/EmK530/BloxDump/releases/latest)
 [<img src="https://img.shields.io/github/downloads/EmK530/BloxDump/total?color=0077ff" alt="Downloads">](https://github.com/EmK530/BloxDump)
 
 A program that goes through Roblox's CDN cache and converts any recognized files.<br>
