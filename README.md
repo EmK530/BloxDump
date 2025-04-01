@@ -16,14 +16,14 @@ This is to prevent any old assets from being caught. Any new cache files that sh
 ## Support
 List of everything BloxDump can currently dump:
 
-    • 2D Textures (PNG / JFIF)
+    • 2D Textures (PNG / JFIF / WebP)
     • 3D Textures (KTX => PNG)
-    • Animations (RBXM)
     • Fonts (TTF)
-    • Meshes (OBJ)
+    • Meshes (v1-v7 => OBJ)
     • Sounds (OGG)
     • Videos (WEBM)
     • Translations (JSON)
+    • RBXM Files
 
 ## Contributions
 BloxDump is fairly complete and most file types are dumped now.<br>If there is something you want to improve feel free to make a pull request!
