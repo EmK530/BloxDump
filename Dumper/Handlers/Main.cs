@@ -1,4 +1,4 @@
-﻿#pragma warning disable CS8600,CS8602,CS8604
+#pragma warning disable CS8600,CS8602,CS8604
 
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
@@ -11,6 +11,7 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 using static Essentials;
+using System.IO;
 
 public static class EXTM3U
 {
@@ -258,6 +259,13 @@ public static class Khronos
         if (!Directory.Exists(outDir))
         {
             Directory.CreateDirectory(outDir);
+        } else
+        {
+            if (File.Exists($"{outDir}\\{dumpName}.png"))
+            {
+                debug($"Thread-{whoami}: Skipping already dumped Khronos Texture.");
+                return;
+            }
         }
         try
         {
@@ -279,7 +287,8 @@ public static class Khronos
                 }
             }
             image.SaveAsPng($"{outDir}\\{dumpName}.png");
-        } catch(Exception ex)
+        }
+        catch (Exception ex)
         {
             error($"Thread-{whoami}: Error converting Khronos Texture! (" + ex.Message + ")");
             return;
