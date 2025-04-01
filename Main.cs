@@ -139,8 +139,8 @@ class Entry
             }
         }
 
-        //for (int i = 0; i < 2; i++)
-        for (int i = 0; i < Math.Max(Environment.ProcessorCount-1,1); i++)
+        for (int i = 0; i < 1; i++)
+        //for (int i = 0; i < Math.Max(Environment.ProcessorCount-1,1); i++)
         {
             int thr = i + 1;
             debug($"Launching dumper Thread-{thr}");

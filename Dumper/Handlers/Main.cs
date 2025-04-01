@@ -270,8 +270,7 @@ public static class Khronos
         {
             Directory.CreateDirectory(outDir);
         }
-        await system($"%temp%\\BloxDump\\PVRTexToolCLI.exe -i \"%cd%\\temp\\{dumpName}.ktx\" -noout -shh -d \"%cd%\\{outDir}\\{dumpName}.png\"");
-        srgb2lin.convert($"{outDir}\\{dumpName}.png");
+        await system($"%temp%\\BloxDump\\PVRTexToolCLI.exe -ics sRGB -i \"%cd%\\temp\\{dumpName}.ktx\" -shh -noout -d \"%cd%\\{outDir}\\{dumpName}.png\"");
         File.Delete($"temp/{dumpName}.ktx");
     }
 }

@@ -5,7 +5,7 @@ using System.Text;
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.0";
+    public static string app_version = "v5.2.1";
 
     public static bool BlockAvatarImages = true;
     public static bool PromptCacheClear = true;
