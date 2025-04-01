@@ -28,6 +28,8 @@ List of everything BloxDump can currently dump:
 ## Contributions
 BloxDump is fairly complete and most file types are dumped now.<br>If there is something you want to improve feel free to make a pull request!
 
-## Credits
-<b>Roblox Mesh to OBJ</b> co-developed by <b>[ApexdaGamer](https://github.com/ApexdaGamer)</b><br>
-<b>Roblox Mesh documentation</b> by <b>[MaximumADHD](https://github.com/MaximumADHD)</b> - [View here](https://devforum.roblox.com/t/roblox-mesh-format/326114)
+## Special thanks to
+<b>[ApexdaGamer](https://github.com/ApexdaGamer)</b>, for co-developing the <b>Roblox Mesh to OBJ</b> converter.<br>
+<b>[MaximumADHD](https://github.com/MaximumADHD)</b>, for documenting the [Roblox Mesh Format](https://devforum.roblox.com/t/roblox-mesh-format/326114)<br>
+<b>[Nominom](https://github.com/Nominom)</b>, for creating [BCnEncoder.NET](https://github.com/Nominom/BCnEncoder.NET) which can parse Khronos Texture<br>
+<b>[EvergineTeam](https://github.com/EvergineTeam)</b>, for creating [Draco.Net](https://github.com/EvergineTeam/Draco.Net) which made Roblox Mesh v7 support possible
