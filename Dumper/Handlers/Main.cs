@@ -11,7 +11,6 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 using static Essentials;
-using System.IO;
 
 public static class EXTM3U
 {
@@ -101,7 +100,7 @@ public static class EXTM3U
                     print($"Thread-{whoami}: Repairing downloaded video...");
                     string name2 = i.Replace(".webm", "-repaired.webm");
                     names.Add("file '" + name2 + "'");
-                    await system($"%temp%\\BloxDump\\ffmpeg.exe -i \"%cd%\\temp\\VideoFrame-{hash}\\{i}\" -c copy -bsf:v setts=ts=PTS-STARTPTS \"%cd%\\temp\\VideoFrame-{hash}\\{name2}\" >nul 2>&1");
+                    await system($"{dependDir}ffmpeg.exe -i \"%cd%\\temp\\VideoFrame-{hash}\\{i}\" -c copy -bsf:v setts=ts=PTS-STARTPTS \"%cd%\\temp\\VideoFrame-{hash}\\{name2}\" >nul 2>&1");
                     if (!File.Exists(tempdir + "/" + name2))
                     {
                         error($"Thread-{whoami}: Repair failed, no output found.");
@@ -133,7 +132,7 @@ public static class EXTM3U
             {
                 Directory.CreateDirectory("assets/Videos");
             }
-            await system($"%temp%\\BloxDump\\ffmpeg.exe -f concat -safe 0 -i \"%cd%\\temp\\VideoFrame-{hash}\\videos.txt\" -c copy \"%cd%\\assets\\Videos\\{hash}.webm\" -y >nul 2>&1");
+            await system($"{dependDir}ffmpeg.exe -f concat -safe 0 -i \"%cd%\\temp\\VideoFrame-{hash}\\videos.txt\" -c copy \"%cd%\\assets\\Videos\\{hash}.webm\" -y >nul 2>&1");
         }
         Directory.Delete(tempdir, true);
     }
@@ -269,24 +268,32 @@ public static class Khronos
         }
         try
         {
-            print($"Thread-{whoami}: Converting Khronos Texture...");
-            MemoryStream ms = new MemoryStream(content);
-            KtxFile ktxFile = KtxFile.Load(ms);
-            BcDecoder decoder = new BcDecoder();
-            ColorRgba32[] decodedImage = decoder.Decode(ktxFile);
-            int width = (int)ktxFile.header.PixelWidth;
-            int height = (int)ktxFile.header.PixelHeight;
-            using var image = new Image<Rgba32>(width, height);
-            for (int y = 0; y < height; y++)
+            uint glfmt = BitConverter.ToUInt32(content, 28);
+            TextureFormat fmt = DetectFormat(glfmt);
+            if (fmt == TextureFormat.BCn)
             {
-                for (int x = 0; x < width; x++)
+                print($"Thread-{whoami}: Converting Khronos Texture...");
+                MemoryStream ms = new MemoryStream(content);
+                KtxFile ktxFile = KtxFile.Load(ms);
+                BcDecoder decoder = new BcDecoder();
+                ColorRgba32[] decodedImage = await decoder.DecodeAsync(ktxFile);
+                int width = (int)ktxFile.header.PixelWidth;
+                int height = (int)ktxFile.header.PixelHeight;
+                using var image = new Image<Rgba32>(width, height);
+                for (int y = 0; y < height; y++)
                 {
-                    int index = y * width + x;
-                    ColorRgba32 color = decodedImage[index];
-                    image[x, y] = new Rgba32(color.r, color.g, color.b, color.a);
+                    for (int x = 0; x < width; x++)
+                    {
+                        int index = y * width + x;
+                        ColorRgba32 color = decodedImage[index];
+                        image[x, y] = new Rgba32(color.r, color.g, color.b, color.a);
+                    }
                 }
+                image.SaveAsPng($"{outDir}\\{dumpName}.png");
+            } else
+            {
+                warn($"Thread-{whoami}: Unsupported Khronos Texture format! (0x{glfmt.ToString("X")} - {fmt})");
             }
-            image.SaveAsPng($"{outDir}\\{dumpName}.png");
         }
         catch (Exception ex)
         {

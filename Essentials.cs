@@ -1,28 +1,84 @@
-﻿using RestSharp;
+﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using RestSharp;
 using System.Diagnostics;
 using System.Text;
 
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.1";
+    public static string app_version = "v5.2.2";
 
-    public static bool BlockAvatarImages = true;
-    public static bool PromptCacheClear = true;
-    public static bool AutoClear = false;
-    public static bool debugMode = false;
+    private static bool usingFallbackConfig = true;
 
-    public static string tempDir = Path.GetTempPath();
-    public static string dependDir = tempDir + "BloxDump\\";
-    public static string webPath = tempDir + "Roblox\\http\\";
-    public static string UWPPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) +
-        "\\Packages\\ROBLOXCORPORATION.ROBLOX_55nm5eh3cm0pr\\LocalState\\http\\";
+    private static long current_cfg_ver = 1; // increment with new keys
+    private static Dictionary<string, object> config = new Dictionary<string, object>()
+    {
+        ["cfg_ver"] = current_cfg_ver,
+        ["DebugLogging"] = false,
+        ["DependencyDir"] = "{TEMP}BloxDump\\",
+        ["DumperSettings"] = new Dictionary<string, object>()
+        {
+            ["BlockAvatarImages"] = true,
+            ["CustomThreadCount"] = new Dictionary<string, object>()
+            {
+                ["Enable"] = false,
+                ["Target"] = 16
+            }
+        },
+        ["Cache"] = new Dictionary<string, object>()
+        {
+            ["PromptClearOnLaunch"] = true,
+            ["AutoClearIfNoPrompt"] = false,
+            ["WebClient"] = new Dictionary<string, object>()
+            {
+                ["Path"] = "{LOCALAPPDATA}Roblox\\rbx-storage\\",
+                ["IsSharded"] = true
+            },
+            ["UWPClient"] = new Dictionary<string, object>()
+            {
+                ["Path"] = "{LOCALAPPDATA}Packages\\ROBLOXCORPORATION.ROBLOX_55nm5eh3cm0pr\\LocalState\\http\\",
+                ["IsSharded"] = false
+            },
+            ["ForceCustomDirectory"] = new Dictionary<string, object>()
+            {
+                ["Enable"] = false,
+                ["TargetDirectory"] = "{TEMP}Roblox\\http\\",
+                ["IsSharded"] = false
+            }
+        },
+        ["Aliases"] = new Dictionary<string, object>()
+        {
+            ["TempPath"] = "{TEMP}",
+            ["LocalAppData"] = "{LOCALAPPDATA}"
+        }
+    };
+    private static Dictionary<string, object> fallbackConfig = DeepClone(config);
+
+    private static bool firstRun = true;
+    private static bool doNotLoad = false;
+
+    public static string tempDir = Path.GetTempPath() + "\\";
+    public static string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\";
+
+    private static Dictionary<string, string> aliasDict = new Dictionary<string, string>()
+    {
+        ["TempPath"] = tempDir,
+        ["LocalAppData"] = localAppData
+    };
+
+    public static bool EnableDebug = false;
+    public static bool BlockAvatarImages = ReadConfigBoolean("DumperSettings.BlockAvatarImages");
+    public static string dependDir = ReadAliasedString("DependencyDir");
+
+    public static string webPath = ReadAliasedString("Cache.WebClient.Path");
+    public static string UWPPath = ReadAliasedString("Cache.UWPClient.Path");
 
     public static void debug(string input) {
 #if DEBUG
         Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input);
 #else
-        if(debugMode)
+        if(EnableDebug)
             Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input);
 #endif
     }
@@ -42,6 +98,204 @@ class Essentials
             }
             return exedir;
         }
+    }
+
+    private static Dictionary<string, object> DeepClone(Dictionary<string, object> original)
+    {
+        var clone = new Dictionary<string, object>();
+
+        foreach (var kvp in original)
+        {
+            if (kvp.Value is Dictionary<string, object> nestedDict)
+            {
+                clone[kvp.Key] = DeepClone(nestedDict);
+            }
+            else
+            {
+                clone[kvp.Key] = kvp.Value;
+            }
+        }
+
+        return clone;
+    }
+
+    private static bool SerializeConfig()
+    {
+        string json = JsonConvert.SerializeObject(config, Formatting.Indented);
+        try
+        {
+            File.WriteAllText("config.json", json);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            error($"Error creating config: {ex.Message}\n{ex.StackTrace}");
+        }
+        return false;
+    }
+
+    public static bool LoadConfig()
+    {
+        if(firstRun)
+        {
+            systemSync("cls");
+            Console.Clear();
+            firstRun = false;
+        }
+        if (doNotLoad)
+            return false;
+        print("Attempting config load...");
+        if (!File.Exists("config.json"))
+        {
+            warn("config.json does not exist! Creating new file from fallback!");
+            if (SerializeConfig())
+                LoadConfig();
+            return false;
+        }
+        try
+        {
+            string json = File.ReadAllText("config.json");
+            JToken root = JToken.Parse(json);
+            var cfg = ConvertJTokenToDictionary(root);
+            object? cfg_ver = ReadConfigObject("cfg_ver", cfg);
+            if (cfg_ver == null || cfg_ver.GetType() != typeof(long) || (long)cfg_ver < current_cfg_ver)
+            {
+                warn("Config is invalid or outdated, overwriting...");
+                SerializeConfig();
+            }
+            else
+            {
+                config = cfg;
+            }
+            usingFallbackConfig = false;
+            print("Successfully loaded config!");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            doNotLoad = true;
+            error($"Error loading config: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static Dictionary<string, object> ConvertJTokenToDictionary(JToken token)
+    {
+        if (token is JObject jObject)
+        {
+            return jObject.Properties()
+                .ToDictionary(
+                    prop => prop.Name,
+                    prop => UnwrapJToken(prop.Value)
+                );
+        }
+        throw new ArgumentException("Token must be a JSON object");
+    }
+
+    private static object UnwrapJToken(object value)
+    {
+        return value switch
+        {
+            JValue jValue => jValue.Value,
+            JObject jObject => ConvertJTokenToDictionary(jObject),
+            JArray jArray => jArray.Select(UnwrapJToken).ToList(),
+            _ => null
+        };
+    }
+
+    public static object? ReadConfigObject(string key, Dictionary<string, object>? cfg = null, bool recurse = false)
+    {
+        if (usingFallbackConfig && cfg == null && !LoadConfig() && !recurse)
+            warn($"Using fallback config for '{key}' because config failed to load.");
+        string[] parts = key.Split('.');
+        object? target = (cfg == null ? (usingFallbackConfig ? fallbackConfig : config) : cfg);
+        foreach (string part in parts)
+        {
+            if (target is Dictionary<string, object> dict)
+            {
+                if (!dict.TryGetValue(part, out target))
+                {
+                    warn($"Cannot read config '{part}' in chain '{key}' because the parent contains no such key.");
+                    return recurse ? null : (key != "cfg_ver" ? ReadConfigObject(key, fallbackConfig, true) : null);
+                }
+            }
+            else
+            {
+                warn($"Cannot read config '{part}' in chain '{key}' because the parent is not a dictionary.");
+                warn(target == null);
+                warn(fallbackConfig == null);
+                return recurse ? null : ReadConfigObject(key, fallbackConfig, true);
+            }
+        }
+        return target;
+    }
+
+    public static bool ReadConfigBoolean(string key)
+    {
+        object? target = ReadConfigObject(key);
+        if (target is bool result)
+            return result;
+        if (target != null)
+            warn($"The config value for '{key}' is not a boolean!");
+        return false;
+    }
+
+    public static int ReadConfigInteger(string key)
+    {
+        object? target = ReadConfigObject(key);
+        if (target is int result)
+            return result;
+        if (target != null)
+            warn($"The config value for '{key}' is not an integer!");
+        return 0;
+    }
+
+    public static string ReadConfigString(string key)
+    {
+        object? target = ReadConfigObject(key);
+        if (target is string result)
+            return result;
+        if (target != null)
+            warn($"The config value for '{key}' is not a string!");
+        return "<value_not_found>";
+    }
+
+    public static string ReadAliasedString(string key)
+    {
+        object? target = ReadConfigObject(key);
+        if (target is string result)
+        {
+            object? aliases = ReadConfigObject("Aliases");
+            if(aliases is Dictionary<string, object> dict)
+            {
+                foreach (KeyValuePair<string, object> kvp in dict)
+                {
+                    if (!aliasDict.ContainsKey(kvp.Key))
+                    {
+                        warn($"Ignoring invalid alias key '{kvp.Key}'");
+                        continue;
+                    }
+                    if (kvp.Value is string str)
+                    {
+                        string replacement = aliasDict[kvp.Key];
+                        string toReplace = (string)kvp.Value;
+                        result = result.Replace(toReplace, replacement);
+                    }
+                    else
+                    {
+                        warn($"Ignoring non-string alias key '{kvp.Key}'");
+                        continue;
+                    }
+                }
+            } else
+            {
+                warn($"Cannot rewrite aliases for config '{key}' because aliases didn't exist or isn't a dictionary!");
+            }
+            return result;
+        }
+        if (target != null)
+            warn($"The config value for '{key}' is not a string!");
+        return "<value_not_found>";
     }
 
     public static async Task<byte[]?> Download(HttpClient client, string URL)
@@ -111,6 +365,18 @@ class Essentials
         WebP = 8
     }
 
+    public static void EmptyFolder(string path)
+    {
+        foreach (string file in Directory.GetFiles(path))
+        {
+            File.Delete(file);
+        }
+        foreach (string dir in Directory.GetDirectories(path))
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
     public static RestClient client = new RestClient();
 
     public static (AssetType, string, string, string) IdentifyContent(byte[] cnt)
@@ -142,6 +408,30 @@ class Essentials
         };
     }
 
+    public enum TextureFormat
+    {
+        Unknown,
+        Uncompressed,
+        BCn,
+        ASTC
+    }
+
+    public static TextureFormat DetectFormat(uint internalFormat)
+    {
+        if ((internalFormat >= 0x1900 && internalFormat <= 0x1908) ||
+            (internalFormat & 0xFF00) == 0x8200) {
+            return TextureFormat.Uncompressed;
+        } else if ((internalFormat & 0xFF00) == 0x8300 ||
+                 (internalFormat & 0xFF00) == 0x8D00 ||
+                 (internalFormat & 0xFF00) == 0x8E00) {
+            return TextureFormat.BCn;
+        } else if ((internalFormat & 0xFF00) == 0x9200 ||
+                 (internalFormat & 0xFF00) == 0x9300) {
+            return TextureFormat.ASTC;
+        }
+        return TextureFormat.Unknown;
+    }
+
     public static async Task system(string cmd)
     {
         Process process = new Process();
@@ -153,6 +443,19 @@ class Essentials
         process.StartInfo = startInfo;
         process.Start();
         await process.WaitForExitAsync();
+    }
+
+    public static void systemSync(string cmd)
+    {
+        Process process = new Process();
+        ProcessStartInfo startInfo = new ProcessStartInfo();
+        startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+        startInfo.FileName = "cmd.exe";
+        startInfo.Arguments = "/C " + cmd;
+        startInfo.WorkingDirectory = exedir;
+        process.StartInfo = startInfo;
+        process.Start();
+        process.WaitForExit();
     }
 
     public static ParsedCache ParseCache(string path)
