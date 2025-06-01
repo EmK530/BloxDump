@@ -1,9 +1,9 @@
-﻿using static Essentials;
+using static Essentials;
 
 class CacheScanner
 {
     public static string targetPath = webPath;
-    public static bool TargetIsSharded = false;
+    public static bool TargetIsSharded = webIsSharded;
 
     public static async Task<bool> Begin()
     {

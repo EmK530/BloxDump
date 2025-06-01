@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Diagnostics;
@@ -72,7 +72,9 @@ class Essentials
     public static string dependDir = ReadAliasedString("DependencyDir");
 
     public static string webPath = ReadAliasedString("Cache.WebClient.Path");
+    public static bool webIsSharded = ReadConfigBoolean("Cache.WebClient.IsSharded");
     public static string UWPPath = ReadAliasedString("Cache.UWPClient.Path");
+    public static bool UWPisSharded = ReadConfigBoolean("Cache.UWPClient.IsSharded");
 
     public static void debug(string input) {
 #if DEBUG
