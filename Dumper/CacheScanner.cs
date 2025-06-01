@@ -1,4 +1,4 @@
-using static Essentials;
+﻿using static Essentials;
 
 class CacheScanner
 {
@@ -7,7 +7,7 @@ class CacheScanner
 
     public static async Task<bool> Begin()
     {
-        while(true)
+        while (true)
         {
             await PerformScan();
             await Task.Delay(5000);
@@ -19,7 +19,7 @@ class CacheScanner
 
     public static async Task PerformScan()
     {
-        if(Directory.Exists(targetPath))
+        if (Directory.Exists(targetPath))
         {
             int found = 0;
             bool changed = false;
@@ -60,11 +60,12 @@ class CacheScanner
 
             if (changed)
                 ignoreSet = new HashSet<string>(known);
-            if(found>0)
-                print($"Queued {found} asset{((found==1)?"":"s")}.");
+            if (found > 0)
+                print($"Queued {found} asset{((found == 1) ? "" : "s")}.");
             else
                 print("Found no new assets.");
-        } else
+        }
+        else
         {
             warn("Cannot scan for caches because the folder does not exist.");
         }

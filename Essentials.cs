@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Diagnostics;
@@ -7,7 +7,7 @@ using System.Text;
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.2";
+    public static string app_version = "v5.2.3";
 
     private static bool usingFallbackConfig = true;
 
@@ -76,7 +76,8 @@ class Essentials
     public static string UWPPath = ReadAliasedString("Cache.UWPClient.Path");
     public static bool UWPisSharded = ReadConfigBoolean("Cache.UWPClient.IsSharded");
 
-    public static void debug(string input) {
+    public static void debug(string input)
+    {
 #if DEBUG
         Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input);
 #else
@@ -138,7 +139,7 @@ class Essentials
 
     public static bool LoadConfig()
     {
-        if(firstRun)
+        if (firstRun)
         {
             systemSync("cls");
             Console.Clear();
@@ -268,7 +269,7 @@ class Essentials
         if (target is string result)
         {
             object? aliases = ReadConfigObject("Aliases");
-            if(aliases is Dictionary<string, object> dict)
+            if (aliases is Dictionary<string, object> dict)
             {
                 foreach (KeyValuePair<string, object> kvp in dict)
                 {
@@ -289,7 +290,8 @@ class Essentials
                         continue;
                     }
                 }
-            } else
+            }
+            else
             {
                 warn($"Cannot rewrite aliases for config '{key}' because aliases didn't exist or isn't a dictionary!");
             }
@@ -313,7 +315,8 @@ class Essentials
                 return null;
             }
             return content;
-        } catch(Exception ex)
+        }
+        catch (Exception ex)
         {
             error("Error downloading asset:");
             error(ex);
@@ -325,7 +328,7 @@ class Essentials
     {
         print("Downloading dependency: " + filename);
         byte[]? content = await Download(new HttpClient(), url);
-        if(content == null)
+        if (content == null)
         {
             return false;
         }
@@ -339,10 +342,11 @@ class Essentials
         {
             this.success = success;
             this.link = link;
-            if(content == null)
+            if (content == null)
             {
                 this.content = new byte[0];
-            } else
+            }
+            else
             {
                 this.content = content;
             }
@@ -421,14 +425,19 @@ class Essentials
     public static TextureFormat DetectFormat(uint internalFormat)
     {
         if ((internalFormat >= 0x1900 && internalFormat <= 0x1908) ||
-            (internalFormat & 0xFF00) == 0x8200) {
+            (internalFormat & 0xFF00) == 0x8200)
+        {
             return TextureFormat.Uncompressed;
-        } else if ((internalFormat & 0xFF00) == 0x8300 ||
+        }
+        else if ((internalFormat & 0xFF00) == 0x8300 ||
                  (internalFormat & 0xFF00) == 0x8D00 ||
-                 (internalFormat & 0xFF00) == 0x8E00) {
+                 (internalFormat & 0xFF00) == 0x8E00)
+        {
             return TextureFormat.BCn;
-        } else if ((internalFormat & 0xFF00) == 0x9200 ||
-                 (internalFormat & 0xFF00) == 0x9300) {
+        }
+        else if ((internalFormat & 0xFF00) == 0x9200 ||
+                 (internalFormat & 0xFF00) == 0x9300)
+        {
             return TextureFormat.ASTC;
         }
         return TextureFormat.Unknown;
@@ -472,7 +481,7 @@ class Essentials
         Encoding utf = Encoding.UTF8;
 
         string magic = utf.GetString(rd.ReadBytes(4));
-        if(magic!="RBXH")
+        if (magic != "RBXH")
         {
             debug("Ignoring non-RBXH magic: " + magic);
             return new ParsedCache(false);
@@ -480,7 +489,7 @@ class Essentials
         rd.BaseStream.Position += 4; // skip header size
         uint linklen = rd.ReadUInt32();
         string link = utf.GetString(rd.ReadBytes((int)linklen));
-        if(knownlinks.Contains(link))
+        if (knownlinks.Contains(link))
         {
             //debug("Ignoring duplicate CDN link: " + link);
             return new ParsedCache(false);
@@ -488,7 +497,7 @@ class Essentials
         rd.BaseStream.Position++; // rogue byte xdd
 
         uint status = rd.ReadUInt32();
-        if(status >= 300)
+        if (status >= 300)
         {
             //debug("Ignoring non-successful cache.");
             return new ParsedCache(false);
@@ -503,7 +512,7 @@ class Essentials
         rd.Dispose();
         data.Dispose();
 
-        return new ParsedCache(true,link,content);
+        return new ParsedCache(true, link, content);
     }
 
     public static (string, string, string) ParseEXTM3U(string content)

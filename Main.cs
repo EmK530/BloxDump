@@ -70,12 +70,12 @@ class Entry
                         {
                             case 1:
                                 CacheScanner.targetPath = webPath;
-                                CacheScanner.TargetIsSharded = ReadConfigBoolean("Cache.WebClient.IsSharded");
+                                CacheScanner.TargetIsSharded = webIsSharded;
                                 done = true;
                                 break;
                             case 2:
                                 CacheScanner.targetPath = UWPPath;
-                                CacheScanner.TargetIsSharded = ReadConfigBoolean("Cache.UWPClient.IsSharded");
+                                CacheScanner.TargetIsSharded = UWPisSharded;
                                 done = true;
                                 break;
                             default:
