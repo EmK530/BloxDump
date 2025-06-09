@@ -15,10 +15,14 @@ class Entry
 
         List<Task> threads = new List<Task>();
 
-        if (!webPath.EndsWith("\\"))
+        if (!webPath.EndsWith("\\") && !webIsDatabase)
             webPath = webPath + "\\";
-        if (!UWPPath.EndsWith("\\"))
+        if (!UWPPath.EndsWith("\\") && !UWPisDatabase)
             UWPPath = UWPPath + "\\";
+        if (!webDB.EndsWith("\\"))
+            webDB = webDB + "\\";
+        if (!UWPdb.EndsWith("\\"))
+            UWPdb = UWPdb + "\\";
 
         // Manage dependencies
         if (!Directory.Exists(dependDir))
@@ -40,21 +44,31 @@ class Entry
         if (ReadConfigBoolean("Cache.ForceCustomDirectory.Enable"))
         {
             string dir = ReadAliasedString("Cache.ForceCustomDirectory.TargetDirectory");
-            if (!Directory.Exists(dir))
+            bool db = ReadConfigBoolean("Cache.ForceCustomDirectory.IsDatabase");
+            if (!(db ? File.Exists(dir) : Directory.Exists(dir)))
             {
-                fatal($"The config enabled dumping from a custom directory, but it did not exist! ({dir})\nFix the directory or disable ForceCustomDirectory.");
+                fatal($"ForceCustomDirectory is enabled, but a path was not found! ({dir})\nFix the config or disable ForceCustomDirectory.");
             }
-            if (!dir.EndsWith("\\"))
+            if (!dir.EndsWith("\\") && !db)
                 dir += "\\";
             CacheScanner.targetPath = dir;
-            CacheScanner.TargetIsSharded = ReadConfigBoolean("Cache.ForceCustomDirectory.IsSharded");
+            CacheScanner.TargetIsDatabase = db;
+            if(db)
+            {
+                string dbDir = ReadAliasedString("Cache.ForceCustomDirectory.DBFolder");
+                if (!Directory.Exists(dir))
+                {
+                    fatal($"ForceCustomDirectory is enabled, but a path was not found! ({dir})\nFix the config or disable ForceCustomDirectory.");
+                }
+                CacheScanner.dbFolder = dbDir;
+            }
         }
         else
         {
-            bool isDir1 = Directory.Exists(webPath);
-            bool isDir2 = Directory.Exists(UWPPath);
+            bool isDir1 = webIsDatabase ? File.Exists(webPath) : Directory.Exists(webPath);
+            bool isDir2 = UWPisDatabase ? File.Exists(UWPPath) : Directory.Exists(UWPPath);
 
-            if (isDir1 && isDir2)
+            if ((isDir1 && isDir2) || (!isDir1 && !isDir2))
             {
                 Console.WriteLine("\nWhich version of Roblox do you use?");
                 Console.WriteLine("If your input is incorrect then dumping will not work as intended.\n");
@@ -70,12 +84,14 @@ class Entry
                         {
                             case 1:
                                 CacheScanner.targetPath = webPath;
-                                CacheScanner.TargetIsSharded = webIsSharded;
+                                CacheScanner.TargetIsDatabase = webIsDatabase;
+                                CacheScanner.dbFolder = webDB;
                                 done = true;
                                 break;
                             case 2:
                                 CacheScanner.targetPath = UWPPath;
-                                CacheScanner.TargetIsSharded = UWPisSharded;
+                                CacheScanner.TargetIsDatabase = UWPisDatabase;
+                                CacheScanner.dbFolder = UWPdb;
                                 done = true;
                                 break;
                             default:
@@ -88,10 +104,8 @@ class Entry
             else if (isDir2 && !isDir1)
             {
                 CacheScanner.targetPath = UWPPath;
-            }
-            else if (!isDir1 && !isDir2)
-            {
-                fatal($"Found no existing cache directory for Roblox, make sure you've ran the game before launching BloxDump.");
+                CacheScanner.TargetIsDatabase = UWPisDatabase;
+                CacheScanner.dbFolder = UWPdb;
             }
         }
 
@@ -104,7 +118,7 @@ class Entry
             {
                 Console.WriteLine();
                 print("Deleting Roblox cache...");
-                EmptyFolder(CacheScanner.targetPath);
+                EmptyFolder();
             }
         }
         else
@@ -112,7 +126,7 @@ class Entry
             if (ReadConfigBoolean("Cache.AutoClearIfNoPrompt"))
             {
                 print("Deleting Roblox cache...");
-                EmptyFolder(CacheScanner.targetPath);
+                EmptyFolder();
             }
         }
 

@@ -3,15 +3,16 @@ using Newtonsoft.Json;
 using RestSharp;
 using System.Diagnostics;
 using System.Text;
+using System.IO;
 
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.3";
+    public static string app_version = "v5.2.4";
 
     private static bool usingFallbackConfig = true;
 
-    private static long current_cfg_ver = 1; // increment with new keys
+    private static long current_cfg_ver = 2; // increment with new keys
     private static Dictionary<string, object> config = new Dictionary<string, object>()
     {
         ["cfg_ver"] = current_cfg_ver,
@@ -32,19 +33,22 @@ class Essentials
             ["AutoClearIfNoPrompt"] = false,
             ["WebClient"] = new Dictionary<string, object>()
             {
-                ["Path"] = "{LOCALAPPDATA}Roblox\\rbx-storage\\",
-                ["IsSharded"] = true
+                ["Path"] = "{LOCALAPPDATA}Roblox\\rbx-storage.db",
+                ["IsDatabase"] = true,
+                ["DBFolder"] = "{LOCALAPPDATA}Roblox\\rbx-storage\\"
             },
             ["UWPClient"] = new Dictionary<string, object>()
             {
                 ["Path"] = "{LOCALAPPDATA}Packages\\ROBLOXCORPORATION.ROBLOX_55nm5eh3cm0pr\\LocalState\\http\\",
-                ["IsSharded"] = false
+                ["IsDatabase"] = false,
+                ["DBFolder"] = "N/A"
             },
             ["ForceCustomDirectory"] = new Dictionary<string, object>()
             {
                 ["Enable"] = false,
                 ["TargetDirectory"] = "{TEMP}Roblox\\http\\",
-                ["IsSharded"] = false
+                ["IsDatabase"] = false,
+                ["DBFolder"] = "N/A"
             }
         },
         ["Aliases"] = new Dictionary<string, object>()
@@ -67,14 +71,16 @@ class Essentials
         ["LocalAppData"] = localAppData
     };
 
-    public static bool EnableDebug = false;
+    public static bool EnableDebug = ReadConfigBoolean("DebugLogging");
     public static bool BlockAvatarImages = ReadConfigBoolean("DumperSettings.BlockAvatarImages");
     public static string dependDir = ReadAliasedString("DependencyDir");
 
     public static string webPath = ReadAliasedString("Cache.WebClient.Path");
-    public static bool webIsSharded = ReadConfigBoolean("Cache.WebClient.IsSharded");
+    public static bool webIsDatabase = ReadConfigBoolean("Cache.WebClient.IsDatabase");
+    public static string webDB = ReadAliasedString("Cache.WebClient.DBFolder");
     public static string UWPPath = ReadAliasedString("Cache.UWPClient.Path");
-    public static bool UWPisSharded = ReadConfigBoolean("Cache.UWPClient.IsSharded");
+    public static bool UWPisDatabase = ReadConfigBoolean("Cache.UWPClient.IsDatabase");
+    public static string UWPdb = ReadAliasedString("Cache.WebClient.DBFolder");
 
     public static void debug(string input)
     {
@@ -371,8 +377,14 @@ class Essentials
         WebP = 8
     }
 
-    public static void EmptyFolder(string path)
+    public static void EmptyFolder()
     {
+        string path = CacheScanner.targetPath;
+        if(CacheScanner.TargetIsDatabase)
+        {
+            File.Delete(path);
+            path = CacheScanner.dbFolder;
+        }
         foreach (string file in Directory.GetFiles(path))
         {
             File.Delete(file);
@@ -469,15 +481,26 @@ class Essentials
         process.WaitForExit();
     }
 
-    public static ParsedCache ParseCache(string path)
+    public static ParsedCache ParseCache(Dumper.Cache asset)
     {
-        if (!File.Exists(path))
+        if(asset.Data != null)
         {
-            warn("Cache path not found: " + path);
+            MemoryStream str = new MemoryStream(asset.Data);
+            BinaryReader br = new BinaryReader(str);
+            return ParseCache(br);
+        }
+        if (!File.Exists(asset.Path))
+        {
+            warn("Cache path not found: " + asset.Path);
             return new ParsedCache(false);
         }
-        Stream data = File.OpenRead(path);
+        Stream data = File.OpenRead(asset.Path);
         BinaryReader rd = new BinaryReader(data);
+        return ParseCache(rd);
+    }
+
+    public static ParsedCache ParseCache(BinaryReader rd)
+    {
         Encoding utf = Encoding.UTF8;
 
         string magic = utf.GetString(rd.ReadBytes(4));
@@ -510,7 +533,6 @@ class Essentials
         knownlinks.Add(link);
 
         rd.Dispose();
-        data.Dispose();
 
         return new ParsedCache(true, link, content);
     }

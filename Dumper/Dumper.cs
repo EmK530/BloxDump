@@ -14,6 +14,7 @@ public static class Dumper
     public struct Cache
     {
         public string Path;
+        public byte[] Data;
     }
 
     public static Channel<Cache> queue = Channel.CreateUnbounded<Cache>();
@@ -28,6 +29,16 @@ public static class Dumper
         await queue.Writer.WriteAsync(new Cache()
         {
             Path = path
+        });
+        UpdateTitle();
+    }
+
+    public static async Task EnqueueAsset(string path, byte[] data)
+    {
+        await queue.Writer.WriteAsync(new Cache()
+        {
+            Path = path,
+            Data = data
         });
         UpdateTitle();
     }
@@ -61,7 +72,7 @@ public static class Dumper
             string link = "";
 
             string path = asset.Path;
-            ParsedCache data = ParseCache(path);
+            ParsedCache data = ParseCache(asset);
             if (!data.success)
                 continue;
             content = data.content;
@@ -73,10 +84,10 @@ public static class Dumper
             switch(res.Item1)
             {
                 case AssetType.Unknown:
-                    warn($"Unrecognized header: {res.Item2} | {dumpName}");
+                    warn($"Thread-{whoami}: Unrecognized header: {res.Item2} | {dumpName}");
                     break;
                 case AssetType.Ignored:
-                    debug($"Ignoring {res.Item3}.");
+                    debug($"Thread-{whoami}: {res.Item3}.");
                     break;
                 case AssetType.NoConvert:
                     {
