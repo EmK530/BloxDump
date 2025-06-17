@@ -113,8 +113,10 @@ public static class Dumper
                             continue;
                         } else
                         {
-                            if (File.Exists($"{outDir}/{dumpName}.{res.Item2}"))
+                            if (!Directory.Exists(outDir))
                             {
+                                Directory.CreateDirectory(outDir);
+                            } else if (File.Exists($"{outDir}/{dumpName}.{res.Item2}")) {
                                 debug($"Thread-{whoami}: Skipping already dumped WebP.");
                                 continue;
                             }

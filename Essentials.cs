@@ -8,7 +8,7 @@ using System.IO;
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.4";
+    public static string app_version = "v5.2.5";
 
     private static bool usingFallbackConfig = true;
 
