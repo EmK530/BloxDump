@@ -3,11 +3,6 @@ using Newtonsoft.Json;
 using RestSharp;
 using System.Diagnostics;
 using System.Text;
-using System.IO;
-using System.Security.AccessControl;
-using System.Security.Principal;
-using System.Security.Permissions;
-using System.Security;
 
 class Essentials
 {
@@ -405,20 +400,6 @@ class Essentials
             return false;
         }
         return true;
-    }
-
-    public static bool HasReadPermission(string path)
-    {
-        try
-        {
-            var permission = new FileIOPermission(FileIOPermissionAccess.Read, path);
-            permission.Demand();
-            return true;
-        }
-        catch (SecurityException)
-        {
-            return false;
-        }
     }
 
     public static RestClient client = new RestClient();
