@@ -4,11 +4,15 @@ using RestSharp;
 using System.Diagnostics;
 using System.Text;
 using System.IO;
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Security.Permissions;
+using System.Security;
 
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.5";
+    public static string app_version = "v5.2.6";
 
     private static bool usingFallbackConfig = true;
 
@@ -377,21 +381,43 @@ class Essentials
         WebP = 8
     }
 
-    public static void EmptyFolder()
+    public static bool EmptyFolder()
     {
-        string path = CacheScanner.targetPath;
-        if(CacheScanner.TargetIsDatabase)
+        try
         {
-            File.Delete(path);
-            path = CacheScanner.dbFolder;
+            string path = CacheScanner.targetPath;
+            if (CacheScanner.TargetIsDatabase)
+            {
+                File.Delete(path);
+                path = CacheScanner.dbFolder;
+            }
+            foreach (string file in Directory.GetFiles(path))
+            {
+                File.Delete(file);
+            }
+            foreach (string dir in Directory.GetDirectories(path))
+            {
+                Directory.Delete(dir, recursive: true);
+            }
         }
-        foreach (string file in Directory.GetFiles(path))
+        catch (Exception)
         {
-            File.Delete(file);
+            return false;
         }
-        foreach (string dir in Directory.GetDirectories(path))
+        return true;
+    }
+
+    public static bool HasReadPermission(string path)
+    {
+        try
         {
-            Directory.Delete(dir, recursive: true);
+            var permission = new FileIOPermission(FileIOPermissionAccess.Read, path);
+            permission.Demand();
+            return true;
+        }
+        catch (SecurityException)
+        {
+            return false;
         }
     }
 

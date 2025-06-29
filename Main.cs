@@ -117,16 +117,31 @@ class Entry
             if (Console.ReadLine().ToLower() == "y")
             {
                 Console.WriteLine();
-                print("Deleting Roblox cache...");
-                EmptyFolder();
+                print("Deleting Roblox cache...\n");
+                while (!EmptyFolder())
+                {
+                    warn("Unable to clear Roblox's cache! You may need to close Roblox first.\n\nDo you wish to try again?");
+                    Console.Write("\nType Y to try again or anything else to ignore: ");
+                    if (Console.ReadLine().ToLower() == "y")
+                    {
+                        Console.Clear();
+                    } else
+                    {
+                        break;
+                    }
+                }
             }
         }
         else
         {
             if (ReadConfigBoolean("Cache.AutoClearIfNoPrompt"))
             {
-                print("Deleting Roblox cache...");
-                EmptyFolder();
+                print("Deleting Roblox cache...\n");
+                if(!EmptyFolder())
+                {
+                    warn("Unable to clear Roblox's cache! You may need to close Roblox first.");
+                    Thread.Sleep(3000);
+                }
             }
         }
 

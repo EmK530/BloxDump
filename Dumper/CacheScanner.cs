@@ -24,21 +24,36 @@ class CacheScanner
 
     public static async Task PerformScan()
     {
+        bool hasWarned = false;
         bool file_exists = File.Exists(targetPath);
         if (TargetIsDatabase ? file_exists : Directory.Exists(targetPath))
         {
             int found = 0;
             bool changed = false;
 
-            if (TargetIsDatabase)
+            if (!TargetIsDatabase)
             {
-                using (var connection = new SQLiteConnection("Data Source="+targetPath))
+                foreach (string i in Directory.GetFiles(targetPath))
                 {
-                    connection.Open();
-                    string query = "SELECT id, content FROM files";
-                    using (var command = new SQLiteCommand(query, connection))
-                    using (var reader = command.ExecuteReader())
+                    string name = Path.GetFileName(i);
+                    if (!ignoreSet.Contains(name))
                     {
+                        changed = true;
+                        known.Add(name);
+                        found += 1;
+                        await Dumper.EnqueueAsset(i);
+                    }
+                }
+            } else
+            {
+                try
+                {
+                    using (var connection = new SQLiteConnection("Data Source=" + targetPath))
+                    {
+                        connection.Open();
+                        string query = "SELECT id, content FROM files";
+                        var command = new SQLiteCommand(query, connection);
+                        var reader = command.ExecuteReader();
                         while (reader.Read())
                         {
                             if (reader["id"] is byte[] id)
@@ -78,18 +93,21 @@ class CacheScanner
                         }
                     }
                 }
-            }
-            else
-            {
-                foreach (string i in Directory.GetFiles(targetPath))
+                catch (Exception ex)
                 {
-                    string name = Path.GetFileName(i);
-                    if (!ignoreSet.Contains(name))
+                    if (!hasWarned)
                     {
-                        changed = true;
-                        known.Add(name);
-                        found += 1;
-                        await Dumper.EnqueueAsset(i);
+                        hasWarned = true;
+                        if (ex.ToString().Contains("0x87AF03F3"))
+                        {
+                            warn($"No access to read target database! Falling back to temp method.\n{targetPath}\n{ex}");
+                        }
+                        else
+                        {
+                            warn($"Target database may be corrupt! Falling back to temp method.\n{targetPath}\n{ex}");
+                        }
+                        TargetIsDatabase = false;
+                        targetPath = $"{tempDir}Roblox\\http\\";
                     }
                 }
             }
