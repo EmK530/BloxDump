@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Diagnostics;
@@ -84,7 +84,7 @@ class Essentials
     public static void debug(string input)
     {
 #if DEBUG
-        //Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input);
+        Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input);
 #else
         if(EnableDebug)
             Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input);
