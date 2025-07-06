@@ -39,6 +39,7 @@ class Entry
         {
             warn("Attempting to move out of System32!");
             Directory.SetCurrentDirectory(exedir);
+            Environment.CurrentDirectory = exedir;
         }
 
         if (ReadConfigBoolean("Cache.ForceCustomDirectory.Enable"))

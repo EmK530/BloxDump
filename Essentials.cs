@@ -7,7 +7,7 @@ using System.Text;
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.6";
+    public static string app_version = "v5.2.7";
 
     private static bool usingFallbackConfig = true;
 
@@ -84,7 +84,7 @@ class Essentials
     public static void debug(string input)
     {
 #if DEBUG
-        Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input);
+        //Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input);
 #else
         if(EnableDebug)
             Console.WriteLine("\x1b[6;30;44m" + "DEBUG" + "\x1b[0m " + input);
@@ -99,10 +99,10 @@ class Essentials
     {
         get
         {
-            string? exedir = Path.GetDirectoryName(AppContext.BaseDirectory);
+            string? exedir = Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory);
             if (string.IsNullOrWhiteSpace(exedir))
             {
-                exedir = AppDomain.CurrentDomain.BaseDirectory;
+                exedir = AppContext.BaseDirectory;
             }
             return exedir;
         }
