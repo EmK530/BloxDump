@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using RestSharp;
 using System.Diagnostics;
@@ -7,11 +7,11 @@ using System.Text;
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.7";
+    public static string app_version = "v5.2.8";
 
     private static bool usingFallbackConfig = true;
 
-    private static long current_cfg_ver = 2; // increment with new keys
+    private static long current_cfg_ver = 3; // increment with new keys
     private static Dictionary<string, object> config = new Dictionary<string, object>()
     {
         ["cfg_ver"] = current_cfg_ver,
@@ -20,6 +20,7 @@ class Essentials
         ["DumperSettings"] = new Dictionary<string, object>()
         {
             ["BlockAvatarImages"] = true,
+            ["UseCDNHashFilenames"] = false,
             ["CustomThreadCount"] = new Dictionary<string, object>()
             {
                 ["Enable"] = false,
@@ -72,6 +73,7 @@ class Essentials
 
     public static bool EnableDebug = ReadConfigBoolean("DebugLogging");
     public static bool BlockAvatarImages = ReadConfigBoolean("DumperSettings.BlockAvatarImages");
+    public static bool UseCDNHashFilenames = ReadConfigBoolean("DumperSettings.UseCDNHashFilenames");
     public static string dependDir = ReadAliasedString("DependencyDir");
 
     public static string webPath = ReadAliasedString("Cache.WebClient.Path");

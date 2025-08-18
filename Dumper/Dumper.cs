@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.ComponentModel.Design;
+using System.Threading.Channels;
 using static Essentials;
 
 public static class Dumper
@@ -77,7 +78,23 @@ public static class Dumper
                 continue;
             content = data.content;
             link = data.link;
-            dumpName = Path.GetFileNameWithoutExtension(path);
+
+            if (UseCDNHashFilenames) {
+                string[] s = link.Split(".com/");
+                dumpName = s[s.Length - 1];
+                if (dumpName.Contains("?"))
+                {
+                    dumpName = dumpName.Split("?")[0];
+                }
+                if (dumpName.Contains("DAY-"))
+                {
+                    dumpName = dumpName.Split("DAY-")[1];
+                }
+                string[] s2 = dumpName.Split("/");
+                dumpName = s2[0];
+            } else {
+                dumpName = Path.GetFileNameWithoutExtension(path);
+            }
             //print($"Thread-{whoami}: Dumping asset hash {dumpName}...");
 
             var res = IdentifyContent(content);
