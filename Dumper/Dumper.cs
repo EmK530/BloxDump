@@ -70,16 +70,19 @@ public static class Dumper
 
             byte[] content;
             string dumpName = "";
-            string link = "";
+            string? link = "";
 
             string path = asset.Path;
             ParsedCache data = ParseCache(asset);
             if (!data.success)
+            {
+                //warn("Failed to parse cache "+Path.GetFileNameWithoutExtension(path));
                 continue;
+            }
             content = data.content;
             link = data.link;
 
-            if (UseCDNHashFilenames) {
+            if (UseCDNHashFilenames && link != null) {
                 string[] s = link.Split(".com/");
                 dumpName = s[s.Length - 1];
                 if (dumpName.Contains("?"))
@@ -104,7 +107,7 @@ public static class Dumper
                     warn($"Thread-{whoami}: Unrecognized header: {res.Item2} | {dumpName}");
                     break;
                 case AssetType.Ignored:
-                    debug($"Thread-{whoami}: {res.Item3}.");
+                    debug($"Thread-{whoami}: Ignoring {res.Item3}.");
                     break;
                 case AssetType.NoConvert:
                     {

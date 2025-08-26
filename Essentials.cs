@@ -7,7 +7,7 @@ using System.Text;
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.8";
+    public static string app_version = "v5.2.9";
 
     private static bool usingFallbackConfig = true;
 
@@ -345,7 +345,7 @@ class Essentials
 
     public struct ParsedCache
     {
-        public ParsedCache(bool success, string link = "", byte[]? content = null)
+        public ParsedCache(bool success, string? link = null, byte[]? content = null)
         {
             this.success = success;
             this.link = link;
@@ -359,7 +359,7 @@ class Essentials
             }
         }
         public bool success = false;
-        public string link;
+        public string? link;
         public byte[] content;
     }
 
@@ -520,18 +520,22 @@ class Essentials
         }
         rd.BaseStream.Position += 4; // skip header size
         uint linklen = rd.ReadUInt32();
-        string link = utf.GetString(rd.ReadBytes((int)linklen));
-        if (knownlinks.Contains(link))
+        string? link = null;
+        if (linklen > 0)
         {
-            //debug("Ignoring duplicate CDN link: " + link);
-            return new ParsedCache(false);
+            link = utf.GetString(rd.ReadBytes((int)linklen));
+            if (knownlinks.Contains(link))
+            {
+                //debug("Ignoring duplicate CDN link: " + link);
+                return new ParsedCache(false);
+            }
         }
         rd.BaseStream.Position++; // rogue byte xdd
 
         uint status = rd.ReadUInt32();
         if (status >= 300)
         {
-            //debug("Ignoring non-successful cache.");
+            //debug($"Ignoring non-successful cache ({status})");
             return new ParsedCache(false);
         }
         uint headerlen = rd.ReadUInt32();
@@ -539,7 +543,8 @@ class Essentials
         uint contentlen = rd.ReadUInt32();
         rd.BaseStream.Position += 8 + headerlen; // skip XXHash digest, reserved bytes and headers
         byte[] content = rd.ReadBytes((int)contentlen);
-        knownlinks.Add(link);
+        if(link != null)
+            knownlinks.Add(link);
 
         rd.Dispose();
 
