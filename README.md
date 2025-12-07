@@ -31,5 +31,6 @@ BloxDump is fairly complete and most file types are dumped now.<br>If there is s
 ## Special thanks to
 <b>[ApexdaGamer](https://github.com/ApexdaGamer)</b>, for co-developing the <b>Roblox Mesh to OBJ</b> converter.<br>
 <b>[MaximumADHD](https://github.com/MaximumADHD)</b>, for documenting the [Roblox Mesh Format](https://devforum.roblox.com/t/roblox-mesh-format/326114)<br>
-<b>[Nominom](https://github.com/Nominom)</b>, for creating [BCnEncoder.NET](https://github.com/Nominom/BCnEncoder.NET) which can parse Khronos Texture<br>
+<b>[Nominom](https://github.com/Nominom)</b>, for creating [BCnEncoder.NET](https://github.com/Nominom/BCnEncoder.NET) which can convert BCn textures<br>
 <b>[EvergineTeam](https://github.com/EvergineTeam)</b>, for creating [Draco.Net](https://github.com/EvergineTeam/Draco.Net) which made Roblox Mesh v7 support possible
+<b>[deccer](https://github.com/deccer)</b>, for creating [Ktx2Sharp](https://github.com/deccer/Ktx2Sharp) which provided bindings for the KTX library
