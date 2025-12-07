@@ -1,7 +1,4 @@
-﻿using System.ComponentModel;
-using System.Data.SQLite;
-using System.Reflection.Metadata.Ecma335;
-using System.Xml.Linq;
+﻿using System.Data.SQLite;
 using static Essentials;
 
 class CacheScanner

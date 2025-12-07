@@ -8,6 +8,16 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
 
+	<Target Name="CopyKtxDll" AfterTargets="Build">
+		<PropertyGroup>
+			<KtxDllPath>Libs\Ktx2Sharp\binaries\win-x64\$(Configuration)\ktx.dll</KtxDllPath>
+		</PropertyGroup>
+		<Copy
+		  SourceFiles="$(KtxDllPath)"
+		  DestinationFolder="$(OutputPath)"
+		  SkipUnchangedFiles="true" />
+	</Target>
+	
 	<PropertyGroup Condition="'$(Configuration)'=='RELEASE'">
 		<PublishSingleFile>true</PublishSingleFile>
 		<PublishReadyToRun>true</PublishReadyToRun>

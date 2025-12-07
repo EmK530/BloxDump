@@ -1,16 +1,20 @@
 #pragma warning disable CS8600,CS8602,CS8604
 
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
-using System.Text;
-using RestSharp;
 using BCnEncoder.Decoder;
-using BCnEncoder.Shared.ImageFiles;
 using BCnEncoder.Shared;
+using BCnEncoder.Shared.ImageFiles;
+using CommunityToolkit.HighPerformance;
+using Ktx2Sharp;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RestSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using System.Runtime.InteropServices;
+using System.Text;
 
 using static Essentials;
+using static Ktx2Sharp.Ktx;
 
 public static class EXTM3U
 {
@@ -252,13 +256,14 @@ public static class Translation
 
 public static class Khronos
 {
-    public static async Task Process(int whoami, string dumpName, byte[] content)
+    public static async Task Process11(int whoami, string dumpName, byte[] content)
     {
         string outDir = $"assets\\KTX Textures";
         if (!Directory.Exists(outDir))
         {
             Directory.CreateDirectory(outDir);
-        } else
+        }
+        else
         {
             if (File.Exists($"{outDir}\\{dumpName}.png"))
             {
@@ -272,32 +277,111 @@ public static class Khronos
             TextureFormat fmt = DetectFormat(glfmt);
             if (fmt == TextureFormat.BCn)
             {
-                print($"Thread-{whoami}: Converting Khronos Texture...");
+                print($"Thread-{whoami}: Converting Khronos Texture 1.1...");
                 MemoryStream ms = new MemoryStream(content);
                 KtxFile ktxFile = KtxFile.Load(ms);
                 BcDecoder decoder = new BcDecoder();
-                ColorRgba32[] decodedImage = await decoder.DecodeAsync(ktxFile);
-                int width = (int)ktxFile.header.PixelWidth;
-                int height = (int)ktxFile.header.PixelHeight;
-                using var image = new Image<Rgba32>(width, height);
-                for (int y = 0; y < height; y++)
+                Memory2D<ColorRgba32> decodedImage = await decoder.Decode2DAsync(ktxFile);
+
+                var output = new Image<Rgba32>(decodedImage.Width, decodedImage.Height);
+                for (var y = 0; y < decodedImage.Height; y++)
                 {
-                    for (int x = 0; x < width; x++)
-                    {
-                        int index = y * width + x;
-                        ColorRgba32 color = decodedImage[index];
-                        image[x, y] = new Rgba32(color.r, color.g, color.b, color.a);
-                    }
+                    var yPixels = output.Frames.RootFrame.PixelBuffer.DangerousGetRowSpan(y);
+                    var yColors = decodedImage.Span.GetRowSpan(y);
+
+                    MemoryMarshal.Cast<ColorRgba32, Rgba32>(yColors).CopyTo(yPixels);
                 }
-                image.SaveAsPng($"{outDir}\\{dumpName}.png");
-            } else
+
+                output.SaveAsPng($"{outDir}\\{dumpName}.png");
+            }
+            else
             {
-                warn($"Thread-{whoami}: Unsupported Khronos Texture format! (0x{glfmt.ToString("X")} - {fmt})");
+                warn($"Thread-{whoami}: Unsupported Khronos Texture 1.1 format! (0x{glfmt.ToString("X")} - {fmt})");
             }
         }
         catch (Exception ex)
         {
-            error($"Thread-{whoami}: Error converting Khronos Texture! (" + ex.Message + ")");
+            error($"Thread-{whoami}: Error converting Khronos Texture 1.1! (" + ex.Message + ")");
+            return;
+        }
+    }
+
+    public static async Task Process20(int whoami, string dumpName, byte[] content)
+    {
+        string outDir = $"assets\\KTX Textures";
+        if (!Directory.Exists(outDir))
+        {
+            Directory.CreateDirectory(outDir);
+        }
+        else
+        {
+            if (File.Exists($"{outDir}\\{dumpName}.png"))
+            {
+                debug($"Thread-{whoami}: Skipping already dumped Khronos Texture. {exedir}");
+                return;
+            }
+        }
+        try
+        {
+            unsafe
+            {
+                KtxTexture* texture = Ktx.LoadFromMemory(content);
+                if(texture == null)
+                {
+                    warn($"Thread-{whoami}: Failed to load Khronos Texture 2.0!");
+                    return;
+                }
+                if (NeedsTranscoding(texture))
+                {
+                    KtxErrorCode err = Transcode(texture, TranscodeFormat.Bc3Rgba, TranscodeFlagBits.HighQuality);
+                    if (err != KtxErrorCode.KtxSuccess)
+                    {
+                        warn($"Thread-{whoami}: Failed to transcode Khronos Texture 2.0! ({err})");
+                        Destroy(texture);
+                        return;
+                    }
+                }
+
+                if((int)texture->VulkanFormat <= 130 || (int)texture->VulkanFormat >= 147)
+                {
+                    warn($"Thread-{whoami}: Unsupported Khronos Texture 2.0 format: {texture->VulkanFormat}");
+                    Destroy(texture);
+                    return;
+                }
+
+                print($"Thread-{whoami}: Converting Khronos Texture 2.0...");
+
+                CompressionFormat fmt = ConvertFormat(texture->VulkanFormat);
+                int blockSize = GetBlockSize(texture->VulkanFormat);
+                uint width = texture->BaseWidth;
+                uint height = texture->BaseHeight;
+                uint offset = GetImageOffset(texture, 0, 0, 0);
+                byte* basePtr = (byte*)texture->Data + offset;
+
+                int blocksWide = (int)((width + 3) / 4);
+                int blocksHigh = (int)((height + 3) / 4);
+                int dataSize = blocksWide * blocksHigh * blockSize;
+
+                byte[] texData = new byte[dataSize];
+                Marshal.Copy((IntPtr)basePtr, texData, 0, texData.Length);
+                Destroy(texture);
+
+                BcDecoder decoder = new BcDecoder();
+                Memory2D<ColorRgba32> colors = decoder.DecodeRaw2D(texData, (int)width, (int)height, fmt);
+                var output = new Image<Rgba32>(colors.Width, colors.Height);
+                for (var y = 0; y < colors.Height; y++)
+                {
+                    var yPixels = output.Frames.RootFrame.PixelBuffer.DangerousGetRowSpan(y);
+                    var yColors = colors.Span.GetRowSpan(y);
+
+                    MemoryMarshal.Cast<ColorRgba32, Rgba32>(yColors).CopyTo(yPixels);
+                }
+                output.SaveAsPng($"{outDir}\\{dumpName}.png");
+            }
+        }
+        catch (Exception ex)
+        {
+            error($"Thread-{whoami}: Error converting Khronos Texture 2.0! (" + ex.Message + ")");
             return;
         }
     }

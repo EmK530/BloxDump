@@ -1,6 +1,5 @@
 ﻿#pragma warning disable CS8602,CS8604
 
-using Newtonsoft.Json.Linq;
 using static Essentials;
 
 class Entry
@@ -9,6 +8,9 @@ class Entry
     {
         //Assets.Init();
         Console.Title = $"{app_name} {app_version}";
+
+        if (!Ktx2Sharp.Ktx.Init())
+            fatal("Could not intialize Ktx2Sharp! Make sure ktx.dll exists.");
 
         CancellationTokenSource cts = new CancellationTokenSource(); // currently unused lol
         Dumper.token = cts.Token;
@@ -31,7 +33,7 @@ class Entry
         }
         if(!File.Exists(dependDir + "ffmpeg.exe"))
         {
-            bool downloaded = await DownloadDependencyAsync("ffmpeg.exe", "https://drive.usercontent.google.com/download?id=1uflkRywFWnySw3oohWoQmwDzhcqpbq0U&export=download&confirm=t");
+            bool downloaded = await DownloadDependencyAsync("ffmpeg.exe", "https://github.com/EmK530/BloxDump/releases/download/dependencies/ffmpeg.exe");
             if (!downloaded)
                 fatal("Could not download dependency: ffmpeg.exe");
         }

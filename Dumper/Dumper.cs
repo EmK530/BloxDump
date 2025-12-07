@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.Design;
-using System.Threading.Channels;
+﻿using System.Threading.Channels;
 using static Essentials;
 
 public static class Dumper
@@ -55,122 +54,141 @@ public static class Dumper
         });
         */
 
-        while (!token.IsCancellationRequested)
+        try
         {
-            // try-catch ReadAsync in case queue is killed and an error is thrown
-            Cache asset;
-            try
+            while (!token.IsCancellationRequested)
             {
-                UpdateTitle();
-                asset = await queue.Reader.ReadAsync();
-            } catch
-            {
-                continue;
-            }
-
-            byte[] content;
-            string dumpName = "";
-            string? link = "";
-
-            string path = asset.Path;
-            ParsedCache data = ParseCache(asset);
-            if (!data.success)
-            {
-                //warn("Failed to parse cache "+Path.GetFileNameWithoutExtension(path));
-                continue;
-            }
-            content = data.content;
-            link = data.link;
-
-            if (UseCDNHashFilenames && link != null) {
-                string[] s = link.Split(".com/");
-                dumpName = s[s.Length - 1];
-                if (dumpName.Contains("?"))
+                // try-catch ReadAsync in case queue is killed and an error is thrown
+                Cache asset;
+                try
                 {
-                    dumpName = dumpName.Split("?")[0];
+                    UpdateTitle();
+                    asset = await queue.Reader.ReadAsync();
                 }
-                if (dumpName.Contains("DAY-"))
+                catch
                 {
-                    dumpName = dumpName.Split("DAY-")[1];
+                    continue;
                 }
-                string[] s2 = dumpName.Split("/");
-                dumpName = s2[0];
-            } else {
-                dumpName = Path.GetFileNameWithoutExtension(path);
-            }
-            //print($"Thread-{whoami}: Dumping asset hash {dumpName}...");
 
-            var res = IdentifyContent(content);
-            switch(res.Item1)
-            {
-                case AssetType.Unknown:
-                    warn($"Thread-{whoami}: Unrecognized header: {res.Item2} | {dumpName}");
-                    break;
-                case AssetType.Ignored:
-                    debug($"Thread-{whoami}: Ignoring {res.Item3}.");
-                    break;
-                case AssetType.NoConvert:
+                byte[] content;
+                string dumpName = "";
+                string? link = "";
+
+                string path = asset.Path;
+                ParsedCache data = ParseCache(asset);
+                if (!data.success)
+                {
+                    //warn("Failed to parse cache "+Path.GetFileNameWithoutExtension(path));
+                    continue;
+                }
+                content = data.content;
+                link = data.link;
+
+                if (UseCDNHashFilenames && link != null)
+                {
+                    string[] s = link.Split(".com/");
+                    dumpName = s[s.Length - 1];
+                    if (dumpName.Contains("?"))
                     {
-                        string outDir = $"assets/{res.Item4}";
-                        if (!Directory.Exists(outDir))
-                        {
-                            Directory.CreateDirectory(outDir);
-                        } else if(File.Exists($"{outDir}/{dumpName}.{res.Item2}"))
-                        {
-                            debug($"Thread-{whoami}: Skipping already dumped {res.Item3}.");
-                            continue;
-                        }
-                        print($"Thread-{whoami}: Saving asset type: {res.Item3}");
-                        await File.WriteAllBytesAsync($"{outDir}/{dumpName}.{res.Item2}",content);
+                        dumpName = dumpName.Split("?")[0];
                     }
-                    break;
-                case AssetType.WebP:
+                    if (dumpName.Contains("DAY-"))
                     {
-                        string outDir = $"assets/{res.Item4}";
-                        if(link.Contains("-AvatarHeadshot-") || link.Contains("-Avatar-"))
+                        dumpName = dumpName.Split("DAY-")[1];
+                    }
+                    string[] s2 = dumpName.Split("/");
+                    dumpName = s2[0];
+                }
+                else
+                {
+                    dumpName = Path.GetFileNameWithoutExtension(path);
+                }
+                //print($"Thread-{whoami}: Dumping asset hash {dumpName}...");
+
+                var res = IdentifyContent(content);
+                switch (res.Item1)
+                {
+                    case AssetType.Unknown:
+                        warn($"Thread-{whoami}: Unrecognized header: {res.Item2} | {dumpName}");
+                        break;
+                    case AssetType.Ignored:
+                        debug($"Thread-{whoami}: Ignoring {res.Item3}.");
+                        break;
+                    case AssetType.NoConvert:
                         {
-                            debug($"Thread-{whoami}: Skipping avatar image.");
-                            continue;
-                        } else
-                        {
+                            string outDir = $"assets/{res.Item4}";
                             if (!Directory.Exists(outDir))
                             {
                                 Directory.CreateDirectory(outDir);
-                            } else if (File.Exists($"{outDir}/{dumpName}.{res.Item2}")) {
-                                debug($"Thread-{whoami}: Skipping already dumped WebP.");
+                            }
+                            else if (File.Exists($"{outDir}/{dumpName}.{res.Item2}"))
+                            {
+                                debug($"Thread-{whoami}: Skipping already dumped {res.Item3}.");
                                 continue;
                             }
                             print($"Thread-{whoami}: Saving asset type: {res.Item3}");
+                            await File.WriteAllBytesAsync($"{outDir}/{dumpName}.{res.Item2}", content);
                         }
-                        await File.WriteAllBytesAsync($"{outDir}/{dumpName}.{res.Item2}", content);
-                    }
-                    break;
-                case AssetType.Mesh:
-                    {
-                        await BloxMesh.Convert(whoami, dumpName, content);
-                    }
-                    break;
-                case AssetType.FontList:
-                    {
-                        await FontList.Process(whoami, dumpName, content);
-                    }
-                    break;
-                case AssetType.Translation:
-                    {
-                        await Translation.Process(whoami, dumpName, content);
-                    }
-                    break;
-                case AssetType.EXTM3U:
-                    {
-                        await EXTM3U.Process(whoami, dumpName, content);
-                    }
-                    break;
-                case AssetType.Khronos:
-                    {
-                        await Khronos.Process(whoami,dumpName,content);
-                    }
-                    break;
+                        break;
+                    case AssetType.WebP:
+                        {
+                            string outDir = $"assets/{res.Item4}";
+                            if (link.Contains("-AvatarHeadshot-") || link.Contains("-Avatar-"))
+                            {
+                                debug($"Thread-{whoami}: Skipping avatar image.");
+                                continue;
+                            }
+                            else
+                            {
+                                if (!Directory.Exists(outDir))
+                                {
+                                    Directory.CreateDirectory(outDir);
+                                }
+                                else if (File.Exists($"{outDir}/{dumpName}.{res.Item2}"))
+                                {
+                                    debug($"Thread-{whoami}: Skipping already dumped WebP.");
+                                    continue;
+                                }
+                                print($"Thread-{whoami}: Saving asset type: {res.Item3}");
+                            }
+                            await File.WriteAllBytesAsync($"{outDir}/{dumpName}.{res.Item2}", content);
+                        }
+                        break;
+                    case AssetType.Mesh:
+                        {
+                            await BloxMesh.Convert(whoami, dumpName, content);
+                        }
+                        break;
+                    case AssetType.FontList:
+                        {
+                            await FontList.Process(whoami, dumpName, content);
+                        }
+                        break;
+                    case AssetType.Translation:
+                        {
+                            await Translation.Process(whoami, dumpName, content);
+                        }
+                        break;
+                    case AssetType.EXTM3U:
+                        {
+                            await EXTM3U.Process(whoami, dumpName, content);
+                        }
+                        break;
+                    case AssetType.Khronos11:
+                        {
+                            await Khronos.Process11(whoami, dumpName, content);
+                        }
+                        break;
+                    case AssetType.Khronos20:
+                        {
+                            await Khronos.Process20(whoami, dumpName, content);
+                        }
+                        break;
+                }
             }
+        } catch(Exception ex)
+        {
+            error($"Thread-{whoami}: Uncaught exception: {ex}");
         }
     }
 }

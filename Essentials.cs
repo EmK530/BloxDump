@@ -7,7 +7,7 @@ using System.Text;
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.2.9";
+    public static string app_version = "v5.3.0";
 
     private static bool usingFallbackConfig = true;
 
@@ -371,11 +371,12 @@ class Essentials
         Ignored = 1,
         NoConvert = 2,
         Mesh = 3,
-        Khronos = 4,
+        Khronos11 = 4,
         EXTM3U = 5,
         Translation = 6,
         FontList = 7,
-        WebP = 8
+        WebP = 8,
+        Khronos20 = 9
     }
 
     public static bool EmptyFolder()
@@ -423,7 +424,8 @@ class Essentials
             var s when s.StartsWith("RIFF") && s.Contains("WEBP") => (BlockAvatarImages ? (AssetType.WebP, "webp", "WebP", "Textures") : (AssetType.NoConvert, "webp", "WebP", "Textures")),
             var s when s.StartsWith("OggS") => (AssetType.NoConvert, "ogg", "OGG", "Sounds"),
             var s when s.StartsWith("ID3") || (cnt.Length > 2 && (cnt[0] & 0xFF) == 0xFF && (cnt[1] & 0xE0) == 0xE0) => (AssetType.NoConvert, "mp3", "MP3", "Sounds"),
-            var s when s.Contains("KTX 11") => (AssetType.Khronos, "", "", ""),
+            var s when s.Contains("KTX 11") => (AssetType.Khronos11, "", "", ""),
+            var s when s.Contains("KTX 20") => (AssetType.Khronos20, "", "", ""),
             var s when s.StartsWith("#EXTM3U") => (AssetType.EXTM3U, "", "", ""),
             var s when s.Contains("\"name\": \"") => (AssetType.FontList, "", "", ""),
             var s when s.Contains("{\"applicationSettings") => (AssetType.Ignored, "", "FFlags JSON", ""),
