@@ -1,13 +1,14 @@
-﻿using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using System.Diagnostics;
+using System.Net;
 using System.Text;
 
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.3.0";
+    public static string app_version = "v5.3.1";
 
     private static bool usingFallbackConfig = true;
 
@@ -553,10 +554,9 @@ class Essentials
         return new ParsedCache(true, link, content);
     }
 
-    public static (string, string, string) ParseEXTM3U(string content)
+    public static (string, string, string) ParseEXTM3U(string content, string url = "")
     {
         string[] lines = content.Split("\n");
-        string url = "";
         string beststream = "";
         string bestRes = "";
         double beststreamBW = 0d;
@@ -573,9 +573,12 @@ class Essentials
                     if (identifier == "#EXT-X-DEFINE")
                     {
                         Dictionary<string, object> cfgd = EXTStringToDict(config);
-                        if ((string)cfgd["NAME"] == "RBX-BASE-URI")
+                        if (cfgd.ContainsKey("NAME"))
                         {
-                            url = (string)cfgd["VALUE"];
+                            if ((string)cfgd["NAME"] == "RBX-BASE-URI")
+                            {
+                                url = (string)cfgd["VALUE"];
+                            }
                         }
                     }
                     else if (identifier == "#EXT-X-STREAM-INF")
@@ -621,5 +624,84 @@ class Essentials
             }
         }
         return output;
+    }
+
+    public static class UrlUtils
+    {
+        public static ParsedUrl ParseUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                throw new ArgumentException("URL cannot be null or empty", nameof(url));
+
+            var uri = new Uri(url, UriKind.Absolute);
+
+            string baseUrl = uri.GetLeftPart(UriPartial.Path);
+
+            var queryDict = new Dictionary<string, string>();
+
+            if (!string.IsNullOrEmpty(uri.Query))
+            {
+                var query = uri.Query.Substring(1);
+
+                foreach (var pair in query.Split('&', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var parts = pair.Split('=', 2);
+
+                    var key = WebUtility.UrlDecode(parts[0]);
+                    var value = parts.Length > 1
+                        ? WebUtility.UrlDecode(parts[1])
+                        : string.Empty;
+
+                    queryDict[key] = value;
+                }
+            }
+
+            return new ParsedUrl
+            {
+                BaseUrl = baseUrl,
+                Query = queryDict
+            };
+        }
+    }
+
+    public class ParsedUrl
+    {
+        public string BaseUrl { get; set; }
+        public Dictionary<string, string> Query { get; set; }
+    }
+
+    public static class TemplateResolver
+    {
+        public static string Resolve(string input, Dictionary<string, string> values)
+        {
+            if (string.IsNullOrEmpty(input) || values == null)
+                return input;
+
+            var sb = new StringBuilder(input.Length);
+
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (input[i] == '{' && i + 2 < input.Length && input[i + 1] == '$')
+                {
+                    int end = input.IndexOf('}', i + 2);
+                    if (end != -1)
+                    {
+                        string key = input.Substring(i + 2, end - (i + 2));
+
+                        if (values.TryGetValue(key, out var value))
+                            sb.Append(value);
+                        else
+                            sb.Append(input, i, end - i + 1);
+
+                        i = end;
+                        continue;
+                    }
+                }
+
+                sb.Append(input[i]);
+            }
+
+            return sb.ToString();
+        }
     }
 }

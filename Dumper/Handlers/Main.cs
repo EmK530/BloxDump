@@ -11,6 +11,7 @@ using RestSharp;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System.Runtime.InteropServices;
+using System.Security.Policy;
 using System.Text;
 
 using static Essentials;
@@ -18,57 +19,27 @@ using static Ktx2Sharp.Ktx;
 
 public static class EXTM3U
 {
-    public static async Task Process(int whoami, string dumpName, byte[] cont)
+    public static async Task Process(int whoami, string dumpName, byte[] cont, string link = "")
     {
         if(File.Exists($"assets/Videos/{dumpName}.webm"))
         {
             debug($"Thread-{whoami}: Skipping already dumped VideoFrame.");
             return;
         }
-        string content = Encoding.UTF8.GetString(cont);
-        if (!content.Contains("RBX-BASE-URI"))
-        {
-            debug($"Thread-{whoami}: Ignoring undesired EXTM3U file.");
-            return;
-        }
         print($"Thread-{whoami}: Dumping asset type: VideoFrame");
-        (string, string, string) M3Data = ParseEXTM3U(content);
-        if (M3Data.Item1 == "")
+        string content = Encoding.UTF8.GetString(cont);
+        int tries;
+        if (content.Contains("EXT-X-INDEPENDENT-SEGMENTS"))
         {
-            error($"Thread-{whoami}: No stream URL found for VideoFrame.");
-            return;
-        }
-        print($"Thread-{whoami}: Downloading metadata for best resolution: " + M3Data.Item2);
-        string metadata = "";
-        int tries = 0;
-        while (true)
-        {
-            var req = new RestRequest(M3Data.Item1, Method.Get);
-            RestResponse resp = client.Get(req);
-            if (resp.IsSuccessStatusCode)
-            {
-                metadata = resp.Content;
-                break;
-            }
-            else
-            {
-                tries++;
-                if (tries == 3)
-                    break;
-                warn($"Thread-{whoami}: Metadata download failed, retrying...");
-            }
-        }
-        if(metadata=="")
-        {
-            error($"Thread-{whoami}: Metadata download failed 3 times, giving up.");
+            debug($"Thread-{whoami}: Ignoring unsupported EXTM3U file.");
             return;
         }
         string hash = dumpName; //string hash = M3Data.Item3.Split("/").Last();
-        string file = M3Data.Item1.Split("/").Last();
-        string segmentUrl = M3Data.Item1.Replace(file, "");
+        //string file = link.Split("/").Last();
+        //string segmentUrl = link.Replace(file, "");
         List<string> segments = new List<string>();
         bool nextIsASegment = false;
-        foreach (string i in metadata.Split("\n"))
+        foreach (string i in content.Split("\n"))
         {
             if (nextIsASegment)
             {
@@ -88,30 +59,35 @@ public static class EXTM3U
         {
             Directory.CreateDirectory(tempdir);
         }
+
+        var result = Essentials.UrlUtils.ParseUrl(link);
+
         List<string> names = new List<string>();
         bool succeeded = true;
         foreach (string i in segments)
         {
-            print($"Thread-{whoami}: Downloading {i} for VideoFrame ({hash})");
+            string safeName = i.Split("?")[0];
+            print($"Thread-{whoami}: Downloading {safeName} for VideoFrame ({hash})");
             tries = 0;
             while (true)
             {
-                var req = new RestRequest(segmentUrl + i, Method.Get);
+                string finalUrl = result.BaseUrl.Split("playlist.m3u8")[0] + TemplateResolver.Resolve(i, result.Query);
+                var req = new RestRequest(finalUrl, Method.Get);
                 RestResponse resp = client.Get(req);
                 if (resp.IsSuccessStatusCode)
                 {
-                    File.WriteAllBytes(tempdir + "/" + i, resp.RawBytes);
+                    File.WriteAllBytes(tempdir + "/" + safeName, resp.RawBytes);
                     print($"Thread-{whoami}: Repairing downloaded video...");
-                    string name2 = i.Replace(".webm", "-repaired.webm");
+                    string name2 = safeName.Replace(".webm", "-repaired.webm");
                     names.Add("file '" + name2 + "'");
-                    await system($"{dependDir}ffmpeg.exe -i \"%cd%\\temp\\VideoFrame-{hash}\\{i}\" -c copy -bsf:v setts=ts=PTS-STARTPTS \"%cd%\\temp\\VideoFrame-{hash}\\{name2}\" >nul 2>&1");
+                    await system($"{dependDir}ffmpeg.exe -i \"%cd%\\temp\\VideoFrame-{hash}\\{safeName}\" -c copy -bsf:v setts=ts=PTS-STARTPTS \"%cd%\\temp\\VideoFrame-{hash}\\{name2}\" >nul 2>&1");
                     if (!File.Exists(tempdir + "/" + name2))
                     {
                         error($"Thread-{whoami}: Repair failed, no output found.");
                         succeeded = false;
                         break;
                     }
-                    File.Delete(tempdir + "/" + i);
+                    File.Delete(tempdir + "/" + safeName);
                     break;
                 }
                 else

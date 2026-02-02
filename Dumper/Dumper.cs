@@ -171,7 +171,7 @@ public static class Dumper
                         break;
                     case AssetType.EXTM3U:
                         {
-                            await EXTM3U.Process(whoami, dumpName, content);
+                            await EXTM3U.Process(whoami, dumpName, content, link ?? "");
                         }
                         break;
                     case AssetType.Khronos11:
