@@ -64,7 +64,6 @@ public static class KtxRipper
             ms.SkipBytes(12 + 4 + 4 + 4 + 4); // assuming the header is correct
             
             var internalFormat = ms.ReadU32();
-            Console.WriteLine(internalFormat.ToString("X2"));
             var format = FormatFrom(internalFormat);
             
             ms.SkipBytes(4); // useless data
@@ -102,8 +101,6 @@ public static class KtxRipper
         {
             var intWidth = (int)Width;
             var intHeight = (int)Height;
-            
-            Console.WriteLine(InternalFormat.ToString("X2"));
             
             if (Format == KtxTextureFormat.RGB8_ETC1 || Format == KtxTextureFormat.RGB8_ETC2 || Format == KtxTextureFormat.SRGB8_ETC2)
             {
