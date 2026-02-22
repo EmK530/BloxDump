@@ -270,6 +270,12 @@ public static class Khronos
 
                 output.SaveAsPng($"{outDir}\\{dumpName}.png");
             }
+            else if (fmt == TextureFormat.ASTC)
+            {
+                print($"Thread-{whoami}: Converting Khronos Texture 1.1...");
+                var tex = KTX1.KtxRipper.KtxTexture.OpenFromMemory(content);
+                tex.SaveToPng($"{outDir}\\{dumpName}.png");
+            }
             else
             {
                 warn($"Thread-{whoami}: Unsupported Khronos Texture 1.1 format! (0x{glfmt.ToString("X")} - {fmt})");
