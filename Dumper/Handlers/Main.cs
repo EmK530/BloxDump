@@ -80,7 +80,7 @@ public static class EXTM3U
                     print($"Thread-{whoami}: Repairing downloaded video...");
                     string name2 = safeName.Replace(".webm", "-repaired.webm");
                     names.Add("file '" + name2 + "'");
-                    await system($"{dependDir}ffmpeg.exe -i \"%cd%\\temp\\VideoFrame-{hash}\\{safeName}\" -c copy -bsf:v setts=ts=PTS-STARTPTS \"%cd%\\temp\\VideoFrame-{hash}\\{name2}\" >nul 2>&1");
+                    await system($"ffmpeg.exe -i \"%cd%\\temp\\VideoFrame-{hash}\\{safeName}\" -c copy -bsf:v setts=ts=PTS-STARTPTS \"%cd%\\temp\\VideoFrame-{hash}\\{name2}\" >nul 2>&1");
                     if (!File.Exists(tempdir + "/" + name2))
                     {
                         error($"Thread-{whoami}: Repair failed, no output found.");
@@ -112,7 +112,7 @@ public static class EXTM3U
             {
                 Directory.CreateDirectory("assets/Videos");
             }
-            await system($"{dependDir}ffmpeg.exe -f concat -safe 0 -i \"%cd%\\temp\\VideoFrame-{hash}\\videos.txt\" -c copy \"%cd%\\assets\\Videos\\{hash}.webm\" -y >nul 2>&1");
+            await system($"ffmpeg.exe -f concat -safe 0 -i \"%cd%\\temp\\VideoFrame-{hash}\\videos.txt\" -c copy \"%cd%\\assets\\Videos\\{hash}.webm\" -y >nul 2>&1");
         }
         Directory.Delete(tempdir, true);
     }

@@ -26,16 +26,12 @@ class Entry
         if (!UWPdb.EndsWith("\\"))
             UWPdb = UWPdb + "\\";
 
-        // Manage dependencies
-        if (!Directory.Exists(dependDir))
-        {
-            Directory.CreateDirectory(dependDir);
-        }
-        if(!File.Exists(dependDir + "ffmpeg.exe"))
+        if (ffmpegPath == null)
         {
             bool downloaded = await DownloadDependencyAsync("ffmpeg.exe", "https://github.com/EmK530/BloxDump/releases/download/dependencies/ffmpeg.exe");
             if (!downloaded)
                 fatal("Could not download dependency: ffmpeg.exe");
+            ffmpegPath = "ffmpeg.exe";
         }
         if(Directory.GetCurrentDirectory().Contains("System32"))
         {

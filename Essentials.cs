@@ -8,7 +8,7 @@ using System.Text;
 class Essentials
 {
     public static string app_name = "BloxDump";
-    public static string app_version = "v5.4.0";
+    public static string app_version = "v5.4.1";
 
     private static bool usingFallbackConfig = true;
 
@@ -17,7 +17,6 @@ class Essentials
     {
         ["cfg_ver"] = current_cfg_ver,
         ["DebugLogging"] = false,
-        ["DependencyDir"] = "{TEMP}BloxDump\\",
         ["DumperSettings"] = new Dictionary<string, object>()
         {
             ["BlockAvatarImages"] = true,
@@ -75,7 +74,10 @@ class Essentials
     public static bool EnableDebug = ReadConfigBoolean("DebugLogging");
     public static bool BlockAvatarImages = ReadConfigBoolean("DumperSettings.BlockAvatarImages");
     public static bool UseCDNHashFilenames = ReadConfigBoolean("DumperSettings.UseCDNHashFilenames");
-    public static string dependDir = ReadAliasedString("DependencyDir");
+    public static string? ffmpegPath = Environment.GetEnvironmentVariable("PATH")?
+        .Split(Path.PathSeparator)
+        .Select(path => Path.Combine(path, "ffmpeg.exe"))
+        .FirstOrDefault(File.Exists);
 
     public static string webPath = ReadAliasedString("Cache.WebClient.Path");
     public static bool webIsDatabase = ReadConfigBoolean("Cache.WebClient.IsDatabase");
@@ -340,7 +342,7 @@ class Essentials
         {
             return false;
         }
-        await File.WriteAllBytesAsync(dependDir + filename, content);
+        await File.WriteAllBytesAsync(filename, content);
         return true;
     }
 

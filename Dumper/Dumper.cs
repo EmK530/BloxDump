@@ -133,24 +133,16 @@ public static class Dumper
                     case AssetType.WebP:
                         {
                             string outDir = $"assets/{res.Item4}";
-                            if (link.Contains("-AvatarHeadshot-") || link.Contains("-Avatar-"))
+                            if (!Directory.Exists(outDir))
                             {
-                                debug($"Thread-{whoami}: Skipping avatar image.");
+                                Directory.CreateDirectory(outDir);
+                            }
+                            else if (File.Exists($"{outDir}/{dumpName}.{res.Item2}"))
+                            {
+                                debug($"Thread-{whoami}: Skipping already dumped WebP.");
                                 continue;
                             }
-                            else
-                            {
-                                if (!Directory.Exists(outDir))
-                                {
-                                    Directory.CreateDirectory(outDir);
-                                }
-                                else if (File.Exists($"{outDir}/{dumpName}.{res.Item2}"))
-                                {
-                                    debug($"Thread-{whoami}: Skipping already dumped WebP.");
-                                    continue;
-                                }
-                                print($"Thread-{whoami}: Saving asset type: {res.Item3}");
-                            }
+                            print($"Thread-{whoami}: Saving asset type: {res.Item3}");
                             await File.WriteAllBytesAsync($"{outDir}/{dumpName}.{res.Item2}", content);
                         }
                         break;
