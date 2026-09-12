@@ -130,22 +130,6 @@ public static class Dumper
                             await File.WriteAllBytesAsync($"{outDir}/{dumpName}.{res.Item2}", content);
                         }
                         break;
-                    case AssetType.WebP:
-                        {
-                            string outDir = $"assets/{res.Item4}";
-                            if (!Directory.Exists(outDir))
-                            {
-                                Directory.CreateDirectory(outDir);
-                            }
-                            else if (File.Exists($"{outDir}/{dumpName}.{res.Item2}"))
-                            {
-                                debug($"Thread-{whoami}: Skipping already dumped WebP.");
-                                continue;
-                            }
-                            print($"Thread-{whoami}: Saving asset type: {res.Item3}");
-                            await File.WriteAllBytesAsync($"{outDir}/{dumpName}.{res.Item2}", content);
-                        }
-                        break;
                     case AssetType.Mesh:
                         {
                             await BloxMesh.Convert(whoami, dumpName, content);

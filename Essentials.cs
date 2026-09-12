@@ -19,7 +19,6 @@ class Essentials
         ["DebugLogging"] = false,
         ["DumperSettings"] = new Dictionary<string, object>()
         {
-            ["BlockAvatarImages"] = true,
             ["UseCDNHashFilenames"] = false,
             ["CustomThreadCount"] = new Dictionary<string, object>()
             {
@@ -72,7 +71,6 @@ class Essentials
     };
 
     public static bool EnableDebug = ReadConfigBoolean("DebugLogging");
-    public static bool BlockAvatarImages = ReadConfigBoolean("DumperSettings.BlockAvatarImages");
     public static bool UseCDNHashFilenames = ReadConfigBoolean("DumperSettings.UseCDNHashFilenames");
     public static string? ffmpegPath = Environment.GetEnvironmentVariable("PATH")?
         .Split(Path.PathSeparator)
@@ -424,7 +422,7 @@ class Essentials
             var s when s.Contains("PNG\r\n") => (AssetType.NoConvert, "png", "PNG", "Textures"),
             var s when s.StartsWith("GIF87a") || s.StartsWith("GIF89a") => (AssetType.NoConvert, "gif", "GIF", "Textures"),
             var s when s.Contains("JFIF") || s.Contains("Exif") => (AssetType.NoConvert, "jfif", "JFIF", "Textures"),
-            var s when s.StartsWith("RIFF") && s.Contains("WEBP") => (BlockAvatarImages ? (AssetType.WebP, "webp", "WebP", "Textures") : (AssetType.NoConvert, "webp", "WebP", "Textures")),
+            var s when s.StartsWith("RIFF") && s.Contains("WEBP") => (AssetType.NoConvert, "webp", "WebP", "Textures"),
             var s when s.StartsWith("OggS") => (AssetType.NoConvert, "ogg", "OGG", "Sounds"),
             var s when s.StartsWith("ID3") || (cnt.Length > 2 && (cnt[0] & 0xFF) == 0xFF && (cnt[1] & 0xE0) == 0xE0) => (AssetType.NoConvert, "mp3", "MP3", "Sounds"),
             var s when s.Contains("KTX 11") => (AssetType.Khronos11, "", "", ""),
