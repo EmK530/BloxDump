@@ -6,6 +6,8 @@ class Entry
 {
     public static async Task Main(string[] args)
     {
+        Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+
         //Assets.Init();
         Console.Title = $"{app_name} {app_version}";
 
@@ -33,13 +35,6 @@ class Entry
                 fatal("Could not download dependency: ffmpeg.exe");
             ffmpegPath = "ffmpeg.exe";
         }
-        if(Directory.GetCurrentDirectory().Contains("System32"))
-        {
-            warn("Attempting to move out of System32!");
-            Directory.SetCurrentDirectory(exedir);
-            Environment.CurrentDirectory = exedir;
-        }
-
         if (ReadConfigBoolean("Cache.ForceCustomDirectory.Enable"))
         {
             string dir = ReadAliasedString("Cache.ForceCustomDirectory.TargetDirectory");
